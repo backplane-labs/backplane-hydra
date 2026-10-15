@@ -5,11 +5,7 @@
 // -c overlay.yml`) and reloads it when it changes.
 package overlay
 
-import (
-	"time"
-
-	"github.com/backplane-labs/backplane/pkg/backplane/config"
-)
+import "time"
 
 // Settings are the Hydra settings the overlay owns. Durations and flags
 // are always written (their defaults are Hydra's); an empty string or
@@ -86,13 +82,19 @@ type Consent struct {
 
 // OIDC options.
 type OIDC struct {
-	DynamicClientRegistration bool          `json:"dynamic_client_registration,omitempty" schemapb:"default=false"`
-	SubjectTypes              []string      `json:"subject_types,omitempty"               schemapb:"description=public, pairwise"`
-	PairwiseSalt              config.Secret `json:"pairwise_salt,omitempty"`
+	DynamicClientRegistration bool     `json:"dynamic_client_registration,omitempty" schemapb:"default=false"`
+	SubjectTypes              []string `json:"subject_types,omitempty"               schemapb:"description=public, pairwise"`
 }
 
 // Refresh token rotation.
 type Refresh struct {
 	RotationGracePeriod time.Duration `json:"rotation_grace_period,omitempty"      schemapb:"default=0s"`
 	RotationGraceReuse  int64         `json:"rotation_grace_reuse_count,omitempty" schemapb:"default=0"`
+}
+
+// Secrets the overlay needs, kept apart from Settings (their own Live
+// paths): the console writes a secret only when the operator enters one.
+type Secrets struct {
+	// PairwiseSalt salts pairwise subject identifiers.
+	PairwiseSalt string
 }

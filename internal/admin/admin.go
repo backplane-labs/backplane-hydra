@@ -4,6 +4,7 @@
 package admin
 
 import (
+	"bytes"
 	"context"
 	"crypto/rand"
 	"encoding/base64"
@@ -180,9 +181,13 @@ func (a *Admin) GetOverlay(context.Context, *v1.GetOverlayRequest) (*v1.GetOverl
 }
 
 func client(c ory.OAuth2Client) *v1.Client {
-	c.ClientSecret = ""
-	// The secret is cleared above; Hydra's JSON marshals.
-	raw, _ := json.MarshalIndent(c, "", "  ") //nolint:gosec,errchkjson // see above //nolint:errchkjson // plain struct
+	var pretty bytes.Buffer
+	if err := json.Indent(&pretty, c.WithoutSecret(), "", "  "); err != nil {
+		pretty.Reset()
+		pretty.Write(c.WithoutSecret())
+	}
+
+	raw := pretty.Bytes()
 
 	return &v1.Client{
 		ClientId: c.ClientID, ClientName: c.ClientName, GrantTypes: c.GrantTypes, RedirectUris: c.RedirectURIs,
@@ -341,8 +346,8 @@ func (a *Admin) RevokeLoginSessions(
 	ctx context.Context,
 	r *v1.RevokeLoginSessionsRequest,
 ) (*v1.RevokeLoginSessionsResponse, error) {
-	err := a.hydra.RevokeLoginSessions(ctx, r.GetSubject(), "")
-	a.audit(ctx, "hydra.logins.revoked", "subject/"+r.GetSubject(), err)
+	err := a.hydra.RevokeLoginSessions(ctx, r.GetSubject(), r.GetSid())
+	a.audit(ctx, "hydra.logins.revoked", "subject/"+r.GetSubject(), err, xlog.String("sid", r.GetSid()))
 
 	return &v1.RevokeLoginSessionsResponse{}, grpcErr(err)
 }
@@ -463,4 +468,39 @@ func (a *Admin) Introspect(ctx context.Context, r *v1.IntrospectRequest) (*v1.In
 	}
 
 	return out, nil
+}
+
+// DeleteClientTokens implements AdminService.
+func (a *Admin) DeleteClientTokens(
+	ctx context.Context,
+	r *v1.DeleteClientTokensRequest,
+) (*v1.DeleteClientTokensResponse, error) {
+	err := a.hydra.DeleteTokens(ctx, r.GetClientId())
+	a.audit(ctx, "hydra.client.tokens_deleted", "client/"+r.GetClientId(), err)
+
+	return &v1.DeleteClientTokensResponse{}, grpcErr(err)
+}
+
+// DeleteKeySet implements AdminService.
+func (a *Admin) DeleteKeySet(ctx context.Context, r *v1.DeleteKeySetRequest) (*v1.DeleteKeySetResponse, error) {
+	err := a.hydra.DeleteKeySet(ctx, r.GetSet())
+	a.audit(ctx, "hydra.keyset.deleted", "keyset/"+r.GetSet(), err)
+
+	return &v1.DeleteKeySetResponse{}, grpcErr(err)
+}
+
+// ImportKey implements AdminService.
+func (a *Admin) ImportKey(ctx context.Context, r *v1.ImportKeyRequest) (*v1.ImportKeyResponse, error) {
+	if err := checkJSON(r.GetJwkJson()); err != nil {
+		return nil, err
+	}
+
+	k, err := a.hydra.ImportKey(ctx, r.GetSet(), r.GetKid(), json.RawMessage(r.GetJwkJson()))
+	a.audit(ctx, "hydra.key.imported", "keyset/"+r.GetSet()+"/"+r.GetKid(), err)
+
+	if err != nil {
+		return nil, grpcErr(err)
+	}
+
+	return &v1.ImportKeyResponse{Key: &v1.Key{Kid: k.KID, Alg: k.Alg, Use: k.Use, Kty: k.Kty}}, nil
 }

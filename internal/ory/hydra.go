@@ -3,6 +3,7 @@ package ory
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -41,6 +42,55 @@ type OAuth2Client struct {
 	Metadata                json.RawMessage `json:"metadata,omitempty"`
 	CreatedAt               *time.Time      `json:"created_at,omitempty"`
 	UpdatedAt               *time.Time      `json:"updated_at,omitempty"`
+
+	// Raw is the whole client as Hydra sent it: every field, those above
+	// and the rest (lifespans, request objects, signing algorithms).
+	Raw json.RawMessage `json:"-"`
+}
+
+// UnmarshalJSON keeps the raw client next to the fields.
+func (c *OAuth2Client) UnmarshalJSON(b []byte) error {
+	type plain OAuth2Client
+
+	var p plain
+	if err := json.Unmarshal(b, &p); err != nil {
+		return fmt.Errorf("client: %w", err)
+	}
+
+	*c = OAuth2Client(p)
+
+	c.Raw = append(json.RawMessage(nil), b...)
+
+	return nil
+}
+
+// WithoutSecret is the raw client without its secret.
+func (c OAuth2Client) WithoutSecret() json.RawMessage {
+	var m map[string]json.RawMessage
+	if err := json.Unmarshal(c.Raw, &m); err != nil {
+		return c.Raw
+	}
+
+	delete(m, "client_secret")
+
+	out, err := json.Marshal(m)
+	if err != nil {
+		return c.Raw
+	}
+
+	return out
+}
+
+// SetClientLifespans sets a client's token lifespans per grant (Hydra's
+// durations like "1h"; absent: the global TTL).
+func (c Client) SetClientLifespans(ctx context.Context, id string, lifespans map[string]string) (OAuth2Client, error) {
+	var out OAuth2Client
+
+	_, err := c.do(ctx, request{
+		method: http.MethodPut, base: c.admin, path: "/admin/clients/" + url.PathEscape(id) + "/lifespans", body: lifespans,
+	}, &out)
+
+	return out, err
 }
 
 // ClientFilter narrows ListClients.
@@ -439,6 +489,52 @@ func (c Client) DeleteKey(ctx context.Context, set, kid string) error {
 	}, nil)
 
 	return err
+}
+
+// DeleteKeySet removes a whole key set.
+func (c Client) DeleteKeySet(ctx context.Context, set string) error {
+	_, err := c.do(
+		ctx,
+		request{method: http.MethodDelete, base: c.admin, path: "/admin/keys/" + url.PathEscape(set)},
+		nil,
+	)
+
+	return err
+}
+
+// ImportKey stores a key the operator brings (with its private part to
+// sign, public only to verify) under set; Hydra answers it.
+func (c Client) ImportKey(ctx context.Context, set, kid string, jwk json.RawMessage) (JWK, error) {
+	var out JWK
+
+	_, err := c.do(ctx, request{
+		method: http.MethodPut, base: c.admin, body: jwk,
+		path: "/admin/keys/" + url.PathEscape(set) + "/" + url.PathEscape(kid),
+	}, &out)
+
+	return out, err
+}
+
+// RejectLogoutRequest refuses a pending logout.
+func (c Client) RejectLogoutRequest(ctx context.Context, challenge string) error {
+	return c.challenge(ctx, http.MethodPut, "logout", "reject", challenge, map[string]string{}, nil)
+}
+
+// AcceptDeviceRequest accepts a device flow's user code: the redirect.
+func (c Client) AcceptDeviceRequest(ctx context.Context, challenge, userCode string) (string, error) {
+	var out redirect
+
+	err := c.challenge(
+		ctx,
+		http.MethodPut,
+		"device",
+		"accept",
+		challenge,
+		map[string]string{"user_code": userCode},
+		&out,
+	)
+
+	return out.RedirectTo, err
 }
 
 // TrustedIssuer may sign JWT bearer grants.

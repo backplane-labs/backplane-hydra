@@ -39,7 +39,7 @@ var (
 )
 
 // Render is the overlay document for s and w.
-func Render(s Settings, w Wiring) (map[string]any, error) {
+func Render(s Settings, sec Secrets, w Wiring) (map[string]any, error) {
 	r := renderer{doc: map[string]any{}}
 
 	public := strings.TrimRight(w.PublicURL, "/")
@@ -80,8 +80,8 @@ func Render(s Settings, w Wiring) (map[string]any, error) {
 		r.set("oidc.subject_identifiers.supported_types", s.OIDC.SubjectTypes)
 	}
 
-	if salt := s.OIDC.PairwiseSalt.Reveal(); salt != "" {
-		r.set("oidc.subject_identifiers.pairwise.salt", salt)
+	if sec.PairwiseSalt != "" {
+		r.set("oidc.subject_identifiers.pairwise.salt", sec.PairwiseSalt)
 	}
 
 	if w.Bound != nil && w.Bound(TokenClaimsHook) {

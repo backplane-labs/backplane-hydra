@@ -27,12 +27,15 @@ const (
 	AdminService_UpdateClient_FullMethodName        = "/hydra.console.v1.AdminService/UpdateClient"
 	AdminService_DeleteClient_FullMethodName        = "/hydra.console.v1.AdminService/DeleteClient"
 	AdminService_RotateClientSecret_FullMethodName  = "/hydra.console.v1.AdminService/RotateClientSecret"
+	AdminService_DeleteClientTokens_FullMethodName  = "/hydra.console.v1.AdminService/DeleteClientTokens"
 	AdminService_ListConsents_FullMethodName        = "/hydra.console.v1.AdminService/ListConsents"
 	AdminService_RevokeConsents_FullMethodName      = "/hydra.console.v1.AdminService/RevokeConsents"
 	AdminService_RevokeLoginSessions_FullMethodName = "/hydra.console.v1.AdminService/RevokeLoginSessions"
 	AdminService_GetKeySet_FullMethodName           = "/hydra.console.v1.AdminService/GetKeySet"
 	AdminService_RotateKey_FullMethodName           = "/hydra.console.v1.AdminService/RotateKey"
 	AdminService_DeleteKey_FullMethodName           = "/hydra.console.v1.AdminService/DeleteKey"
+	AdminService_DeleteKeySet_FullMethodName        = "/hydra.console.v1.AdminService/DeleteKeySet"
+	AdminService_ImportKey_FullMethodName           = "/hydra.console.v1.AdminService/ImportKey"
 	AdminService_ListTrustedIssuers_FullMethodName  = "/hydra.console.v1.AdminService/ListTrustedIssuers"
 	AdminService_TrustIssuer_FullMethodName         = "/hydra.console.v1.AdminService/TrustIssuer"
 	AdminService_DeleteTrustedIssuer_FullMethodName = "/hydra.console.v1.AdminService/DeleteTrustedIssuer"
@@ -59,6 +62,8 @@ type AdminServiceClient interface {
 	DeleteClient(ctx context.Context, in *DeleteClientRequest, opts ...grpc.CallOption) (*DeleteClientResponse, error)
 	// RotateClientSecret sets a generated secret and answers it once.
 	RotateClientSecret(ctx context.Context, in *RotateClientSecretRequest, opts ...grpc.CallOption) (*RotateClientSecretResponse, error)
+	// DeleteClientTokens deletes every token issued to a client.
+	DeleteClientTokens(ctx context.Context, in *DeleteClientTokensRequest, opts ...grpc.CallOption) (*DeleteClientTokensResponse, error)
 	ListConsents(ctx context.Context, in *ListConsentsRequest, opts ...grpc.CallOption) (*ListConsentsResponse, error)
 	RevokeConsents(ctx context.Context, in *RevokeConsentsRequest, opts ...grpc.CallOption) (*RevokeConsentsResponse, error)
 	RevokeLoginSessions(ctx context.Context, in *RevokeLoginSessionsRequest, opts ...grpc.CallOption) (*RevokeLoginSessionsResponse, error)
@@ -66,6 +71,9 @@ type AdminServiceClient interface {
 	// RotateKey adds a generated key: it signs from now on, older ones still verify.
 	RotateKey(ctx context.Context, in *RotateKeyRequest, opts ...grpc.CallOption) (*RotateKeyResponse, error)
 	DeleteKey(ctx context.Context, in *DeleteKeyRequest, opts ...grpc.CallOption) (*DeleteKeyResponse, error)
+	DeleteKeySet(ctx context.Context, in *DeleteKeySetRequest, opts ...grpc.CallOption) (*DeleteKeySetResponse, error)
+	// ImportKey stores a key the operator brings.
+	ImportKey(ctx context.Context, in *ImportKeyRequest, opts ...grpc.CallOption) (*ImportKeyResponse, error)
 	ListTrustedIssuers(ctx context.Context, in *ListTrustedIssuersRequest, opts ...grpc.CallOption) (*ListTrustedIssuersResponse, error)
 	TrustIssuer(ctx context.Context, in *TrustIssuerRequest, opts ...grpc.CallOption) (*TrustIssuerResponse, error)
 	DeleteTrustedIssuer(ctx context.Context, in *DeleteTrustedIssuerRequest, opts ...grpc.CallOption) (*DeleteTrustedIssuerResponse, error)
@@ -161,6 +169,16 @@ func (c *adminServiceClient) RotateClientSecret(ctx context.Context, in *RotateC
 	return out, nil
 }
 
+func (c *adminServiceClient) DeleteClientTokens(ctx context.Context, in *DeleteClientTokensRequest, opts ...grpc.CallOption) (*DeleteClientTokensResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteClientTokensResponse)
+	err := c.cc.Invoke(ctx, AdminService_DeleteClientTokens_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *adminServiceClient) ListConsents(ctx context.Context, in *ListConsentsRequest, opts ...grpc.CallOption) (*ListConsentsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(ListConsentsResponse)
@@ -215,6 +233,26 @@ func (c *adminServiceClient) DeleteKey(ctx context.Context, in *DeleteKeyRequest
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(DeleteKeyResponse)
 	err := c.cc.Invoke(ctx, AdminService_DeleteKey_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminServiceClient) DeleteKeySet(ctx context.Context, in *DeleteKeySetRequest, opts ...grpc.CallOption) (*DeleteKeySetResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeleteKeySetResponse)
+	err := c.cc.Invoke(ctx, AdminService_DeleteKeySet_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *adminServiceClient) ImportKey(ctx context.Context, in *ImportKeyRequest, opts ...grpc.CallOption) (*ImportKeyResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ImportKeyResponse)
+	err := c.cc.Invoke(ctx, AdminService_ImportKey_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -281,6 +319,8 @@ type AdminServiceServer interface {
 	DeleteClient(context.Context, *DeleteClientRequest) (*DeleteClientResponse, error)
 	// RotateClientSecret sets a generated secret and answers it once.
 	RotateClientSecret(context.Context, *RotateClientSecretRequest) (*RotateClientSecretResponse, error)
+	// DeleteClientTokens deletes every token issued to a client.
+	DeleteClientTokens(context.Context, *DeleteClientTokensRequest) (*DeleteClientTokensResponse, error)
 	ListConsents(context.Context, *ListConsentsRequest) (*ListConsentsResponse, error)
 	RevokeConsents(context.Context, *RevokeConsentsRequest) (*RevokeConsentsResponse, error)
 	RevokeLoginSessions(context.Context, *RevokeLoginSessionsRequest) (*RevokeLoginSessionsResponse, error)
@@ -288,6 +328,9 @@ type AdminServiceServer interface {
 	// RotateKey adds a generated key: it signs from now on, older ones still verify.
 	RotateKey(context.Context, *RotateKeyRequest) (*RotateKeyResponse, error)
 	DeleteKey(context.Context, *DeleteKeyRequest) (*DeleteKeyResponse, error)
+	DeleteKeySet(context.Context, *DeleteKeySetRequest) (*DeleteKeySetResponse, error)
+	// ImportKey stores a key the operator brings.
+	ImportKey(context.Context, *ImportKeyRequest) (*ImportKeyResponse, error)
 	ListTrustedIssuers(context.Context, *ListTrustedIssuersRequest) (*ListTrustedIssuersResponse, error)
 	TrustIssuer(context.Context, *TrustIssuerRequest) (*TrustIssuerResponse, error)
 	DeleteTrustedIssuer(context.Context, *DeleteTrustedIssuerRequest) (*DeleteTrustedIssuerResponse, error)
@@ -327,6 +370,9 @@ func (UnimplementedAdminServiceServer) DeleteClient(context.Context, *DeleteClie
 func (UnimplementedAdminServiceServer) RotateClientSecret(context.Context, *RotateClientSecretRequest) (*RotateClientSecretResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method RotateClientSecret not implemented")
 }
+func (UnimplementedAdminServiceServer) DeleteClientTokens(context.Context, *DeleteClientTokensRequest) (*DeleteClientTokensResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteClientTokens not implemented")
+}
 func (UnimplementedAdminServiceServer) ListConsents(context.Context, *ListConsentsRequest) (*ListConsentsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListConsents not implemented")
 }
@@ -344,6 +390,12 @@ func (UnimplementedAdminServiceServer) RotateKey(context.Context, *RotateKeyRequ
 }
 func (UnimplementedAdminServiceServer) DeleteKey(context.Context, *DeleteKeyRequest) (*DeleteKeyResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeleteKey not implemented")
+}
+func (UnimplementedAdminServiceServer) DeleteKeySet(context.Context, *DeleteKeySetRequest) (*DeleteKeySetResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteKeySet not implemented")
+}
+func (UnimplementedAdminServiceServer) ImportKey(context.Context, *ImportKeyRequest) (*ImportKeyResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ImportKey not implemented")
 }
 func (UnimplementedAdminServiceServer) ListTrustedIssuers(context.Context, *ListTrustedIssuersRequest) (*ListTrustedIssuersResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ListTrustedIssuers not implemented")
@@ -522,6 +574,24 @@ func _AdminService_RotateClientSecret_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AdminService_DeleteClientTokens_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteClientTokensRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).DeleteClientTokens(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_DeleteClientTokens_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).DeleteClientTokens(ctx, req.(*DeleteClientTokensRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AdminService_ListConsents_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListConsentsRequest)
 	if err := dec(in); err != nil {
@@ -626,6 +696,42 @@ func _AdminService_DeleteKey_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(AdminServiceServer).DeleteKey(ctx, req.(*DeleteKeyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminService_DeleteKeySet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteKeySetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).DeleteKeySet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_DeleteKeySet_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).DeleteKeySet(ctx, req.(*DeleteKeySetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AdminService_ImportKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ImportKeyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AdminServiceServer).ImportKey(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AdminService_ImportKey_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AdminServiceServer).ImportKey(ctx, req.(*ImportKeyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -742,6 +848,10 @@ var AdminService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _AdminService_RotateClientSecret_Handler,
 		},
 		{
+			MethodName: "DeleteClientTokens",
+			Handler:    _AdminService_DeleteClientTokens_Handler,
+		},
+		{
 			MethodName: "ListConsents",
 			Handler:    _AdminService_ListConsents_Handler,
 		},
@@ -764,6 +874,14 @@ var AdminService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteKey",
 			Handler:    _AdminService_DeleteKey_Handler,
+		},
+		{
+			MethodName: "DeleteKeySet",
+			Handler:    _AdminService_DeleteKeySet_Handler,
+		},
+		{
+			MethodName: "ImportKey",
+			Handler:    _AdminService_ImportKey_Handler,
 		},
 		{
 			MethodName: "ListTrustedIssuers",

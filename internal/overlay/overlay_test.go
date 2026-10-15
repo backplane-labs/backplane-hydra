@@ -5,8 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/backplane-labs/backplane/pkg/backplane/config"
-
 	"github.com/backplane-labs/backplane-hydra/internal/overlay"
 )
 
@@ -28,12 +26,9 @@ func TestRenderValid(t *testing.T) {
 	s.Issuer, s.LoginURL, s.ErrorURL = "https://auth.example.com/", "https://app.example.com/login", "https://app.example.com/error"
 	s.Tokens.AccessToken = "jwt"
 	s.Claims.AllowedTopLevel = []string{"tenant"}
-	s.OIDC = overlay.OIDC{
-		SubjectTypes: []string{"public", "pairwise"},
-		PairwiseSalt: config.Secret("0123456789abcdef0123456789"),
-	}
+	s.OIDC = overlay.OIDC{SubjectTypes: []string{"public", "pairwise"}}
 
-	doc, err := overlay.Render(s, overlay.Wiring{
+	doc, err := overlay.Render(s, overlay.Secrets{PairwiseSalt: "0123456789abcdef0123456789"}, overlay.Wiring{
 		PublicURL: "https://auth.example.com/bp", CallbacksURL: "http://127.0.0.1:8091", Key: "k",
 		Bound: func(string) bool { return true },
 	})
@@ -59,13 +54,16 @@ func TestRenderOverrides(t *testing.T) {
 	s := defaults()
 	s.Overrides = "urls:\n  consent: https://elsewhere/\n"
 
-	if _, err := overlay.Render(s, overlay.Wiring{PublicURL: "http://x"}); !errors.Is(err, overlay.ErrConflict) {
+	if _, err := overlay.Render(s, overlay.Secrets{}, overlay.Wiring{PublicURL: "http://x"}); !errors.Is(
+		err,
+		overlay.ErrConflict,
+	) {
 		t.Fatalf("owned key overridden: %v", err)
 	}
 
 	s.Overrides = "oauth2:\n  hashers:\n    algorithm: bcrypt\n"
 
-	doc, err := overlay.Render(s, overlay.Wiring{PublicURL: "http://x"})
+	doc, err := overlay.Render(s, overlay.Secrets{}, overlay.Wiring{PublicURL: "http://x"})
 	if err != nil {
 		t.Fatal(err)
 	}

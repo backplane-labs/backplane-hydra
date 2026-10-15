@@ -12,12 +12,13 @@ import {
 } from '@backplane-labs/backplane-ui';
 import { AdminServiceClient } from './gen/proto/hydra/console/v1/admin_ws_pb';
 import {
-  CreateClientRequestSchema, DeleteClientRequestSchema, DeleteKeyRequestSchema, DeleteTrustedIssuerRequestSchema, GetClientRequestSchema,
+  CreateClientRequestSchema, DeleteClientRequestSchema, DeleteClientTokensRequestSchema, DeleteKeyRequestSchema, DeleteKeySetRequestSchema, ImportKeyRequestSchema, DeleteTrustedIssuerRequestSchema, GetClientRequestSchema,
   GetKeySetRequestSchema, GetOverlayRequestSchema, GetStatusRequestSchema, IntrospectRequestSchema, ListClientsRequestSchema, ListConsentsRequestSchema,
   ListTrustedIssuersRequestSchema, RevokeConsentsRequestSchema, RevokeLoginSessionsRequestSchema, RotateClientSecretRequestSchema, RotateKeyRequestSchema,
   TrustIssuerRequestSchema, UpdateClientRequestSchema, type IntrospectResponse,
 } from './gen/proto/hydra/console/v1/admin_pb';
 import navigation from './navigation';
+import { Settings } from './settings';
 
 const mono = { fontFamily: 'var(--font-mono)' } as const;
 const muted = { color: 'var(--muted-foreground)', fontSize: 12 } as const;
@@ -160,6 +161,10 @@ function ClientCard({ id, onClose, onChanged }: { id: string; onClose: () => voi
         <Button size="sm" disabled={save.pending} onClick={() => void save.run(async (signal) => { await client.updateClient(create(UpdateClientRequestSchema, { clientId: id, clientJson: json }), { signal }); card.refresh(); onChanged(); })}>{save.pending ? t('saving') : t('save')}</Button></Stack>}>
         <ClientEditor value={json} onChange={setJson} />
       </Panel>
+      <Panel title={t('clientTokens')} description={t('clientTokensHint')}>
+        <ConfirmAction trigger={<Button size="sm" variant="outline">{t('deleteTokens')}</Button>} title={t('deleteTokensTitle')} description={t('deleteTokensDescription')} confirmLabel={t('deleteTokens')}
+          onConfirm={async (signal) => { await client.deleteClientTokens(create(DeleteClientTokensRequestSchema, { clientId: id }), { signal }); }} />
+      </Panel>
       <Panel title={t('secret')} description={t('secretHint')}>
         {rotate.value ? <Secret secret={rotate.value} /> : <Stack direction="row" gap={8} style={{ alignItems: 'center' }}>
           <ConfirmAction trigger={<Button size="sm" variant="outline">{t('rotateSecret')}</Button>} title={t('rotateSecretTitle')} description={t('rotateSecretDescription')} confirmLabel={t('rotateSecret')}
@@ -191,12 +196,17 @@ function CreateClient({ onClose, onCreated }: { onClose: () => void; onCreated: 
 
 function Subjects() {
   const t = useText(), client = useClient(AdminServiceClient);
-  const [subject, setSubject] = useState(''), [applied, setApplied] = useState('');
+  const [subject, setSubject] = useState(''), [applied, setApplied] = useState(''), [sid, setSid] = useState(''), endOne = usePlatformAction<boolean>();
   const list = usePlatformQuery(`hydra:consents:${applied}`, (signal) => applied ? client.listConsents(create(ListConsentsRequestSchema, { subject: applied }), { signal }) : Promise.resolve(undefined), { keep: true });
   return <Stack gap={16}><ConnectionNotice />
     <Header title={t('subjectsTitle')} description={t('subjectsDescription')} />
     <Stack direction="row" gap={8}><Input aria-label={t('subject')} placeholder={t('subjectHint')} value={subject} onChange={(e) => setSubject(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && setApplied(subject.trim())} style={{ maxWidth: 420 }} />
       <Button size="sm" onClick={() => setApplied(subject.trim())}>{t('look')}</Button></Stack>
+    {applied && <Stack direction="row" gap={8} style={{ alignItems: 'center' }}>
+      <Input aria-label={t('sid')} placeholder={t('sidHint')} value={sid} onChange={(e) => setSid(e.target.value)} style={{ maxWidth: 360 }} />
+      <Button size="sm" variant="outline" disabled={!sid || endOne.pending} onClick={() => void endOne.run(async (signal) => { await client.revokeLoginSessions(create(RevokeLoginSessionsRequestSchema, { subject: applied, sid }), { signal }); setSid(''); return true; })}>{t('endOne')}</Button>
+      <ActionError error={endOne.error} />{endOne.value && <StatusBadge tone="success">{t('ended')}</StatusBadge>}
+    </Stack>}
     {applied && <Panel title={t('consents')} count={list.value?.consents.length} flush actions={<Stack direction="row" gap={8}>
       <ConfirmAction trigger={<Button size="sm" variant="outline">{t('revokeAllConsents')}</Button>} title={t('revokeAllConsentsTitle')} description={t('revokeAllConsentsDescription')} confirmLabel={t('revoke')}
         onConfirm={async (signal) => { await client.revokeConsents(create(RevokeConsentsRequestSchema, { subject: applied }), { signal }); list.refresh(); }} />
@@ -222,25 +232,35 @@ const sets = ['hydra.openid.id-token', 'hydra.jwt.access-token'] as const;
 
 function Keys() {
   const t = useText(), client = useClient(AdminServiceClient);
-  const [set, setSet] = useState<string>(sets[0]), [alg, setAlg] = useState('RS256');
+  const { mode } = usePluginContext();
+  const [set, setSet] = useState<string>(sets[0]), [alg, setAlg] = useState('RS256'), [kid, setKid] = useState(''), [jwk, setJwk] = useState('');
+  const imported = usePlatformAction<void>(), navigate = usePluginNavigate();
   const keys = usePlatformQuery(`hydra:keys:${set}`, (signal) => client.getKeySet(create(GetKeySetRequestSchema, { set }), { signal }), { keep: true });
   const rotate = usePlatformAction<void>();
   return <Stack gap={16}><ConnectionNotice />
     <Header title={t('keysTitle')} description={t('keysDescription')} />
     <Stack direction="row" gap={8} style={{ alignItems: 'center' }}>
-      <NativeSelect aria-label={t('keySet')} value={set} onChange={(e) => setSet(e.target.value)}>{sets.map((s) => <option key={s} value={s}>{s}</option>)}</NativeSelect>
+      <Input aria-label={t('keySet')} list="hydra-key-sets" value={set} onChange={(e) => setSet(e.target.value)} style={{ maxWidth: 280 }} />
+      <datalist id="hydra-key-sets">{sets.map((s) => <option key={s} value={s} />)}</datalist>
       <NativeSelect aria-label={t('alg')} value={alg} onChange={(e) => setAlg(e.target.value)}>{['RS256', 'ES256', 'ES512', 'EdDSA'].map((a) => <option key={a} value={a}>{a}</option>)}</NativeSelect>
       <ConfirmAction trigger={<Button size="sm">{t('rotateKey')}</Button>} title={t('rotateKeyTitle')} description={t('rotateKeyDescription')} confirmLabel={t('rotateKey')}
         onConfirm={async () => { await rotate.run(async (signal) => { await client.rotateKey(create(RotateKeyRequestSchema, { set, alg }), { signal }); keys.refresh(); }); }} />
       <ActionError error={rotate.error} />
+      {!(sets as readonly string[]).includes(set) && <ConfirmAction trigger={<Button size="sm" variant="outline">{t('deleteSet')}</Button>} title={t('deleteSetTitle')} description={t('deleteSetDescription')} confirmLabel={t('deleteSet')}
+        onConfirm={async (signal) => { await client.deleteKeySet(create(DeleteKeySetRequestSchema, { set }), { signal }); setSet(sets[0]); navigate('keys'); }} />}
     </Stack>
     <Panel title={set} count={keys.value?.keys.length} flush footer={<span style={muted}>{t('keysFooter')}</span>}>
       {keys.error !== undefined ? <Failure error={keys.error} /> : !keys.value ? <Loading /> : !keys.value.keys.length ? <EmptyState title={t('noKeys')} />
         : <Table><TableHeader><TableRow><TableHead>{t('kid')}</TableHead><TableHead>{t('alg')}</TableHead><TableHead>{t('use')}</TableHead><TableHead /></TableRow></TableHeader>
-          <TableBody>{keys.value.keys.map((k, i) => <TableRow key={k.kid}><TableCell style={mono}>{k.kid}{i === 0 && <Badge variant="outline" style={{ marginLeft: 8 }}>{t('signing')}</Badge>}</TableCell>
+          <TableBody>{keys.value.keys.map((k, i) => <TableRow key={`${k.kid}:${i}`}><TableCell style={mono}>{k.kid}{i === 0 && <Badge variant="outline" style={{ marginLeft: 8 }}>{t('signing')}</Badge>}</TableCell>
             <TableCell>{k.alg}</TableCell><TableCell>{k.use}</TableCell>
             <TableCell style={{ textAlign: 'right' }}>{keys.value!.keys.length > 1 && <ConfirmAction trigger={<Button size="sm" variant="outline">{t('delete')}</Button>} title={t('deleteKeyTitle')} description={t('deleteKeyDescription')} confirmLabel={t('delete')}
               onConfirm={async (signal) => { await client.deleteKey(create(DeleteKeyRequestSchema, { set, kid: k.kid }), { signal }); keys.refresh(); }} />}</TableCell></TableRow>)}</TableBody></Table>}
+    </Panel>
+    <Panel title={t('importKey')} description={t('importKeyHint')} actions={<Stack direction="row" gap={8} style={{ alignItems: 'center' }}><ActionError error={imported.error} />
+      <Button size="sm" disabled={!kid || !jwk || imported.pending} onClick={() => void imported.run(async (signal) => { await client.importKey(create(ImportKeyRequestSchema, { set, kid, jwkJson: jwk }), { signal }); setJwk(''); keys.refresh(); })}>{t('import')}</Button></Stack>}>
+      <Stack gap={8}><Input aria-label={t('kid')} placeholder={t('kid')} value={kid} onChange={(e) => setKid(e.target.value)} style={{ maxWidth: 360 }} />
+        <CodeEditor label={t('jwk')} value={jwk} onChange={setJwk} language="json" mode={mode} height={180} /></Stack>
     </Panel>
   </Stack>;
 }
@@ -302,6 +322,6 @@ export const definition = definePlugin({
   ...navigation,
   routes: [
     { index: true, element: <Overview /> }, { path: 'clients', element: <Clients /> }, { path: 'subjects', element: <Subjects /> },
-    { path: 'keys', element: <Keys /> }, { path: 'issuers', element: <Issuers /> }, { path: 'tokens', element: <Tokens /> }, { path: '*', element: <Missing /> },
+    { path: 'keys', element: <Keys /> }, { path: 'issuers', element: <Issuers /> }, { path: 'tokens', element: <Tokens /> }, { path: 'settings', element: <Settings /> }, { path: '*', element: <Missing /> },
   ],
 });

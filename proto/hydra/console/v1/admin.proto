@@ -23,6 +23,8 @@ service AdminService {
   rpc DeleteClient(DeleteClientRequest) returns (DeleteClientResponse);
   // RotateClientSecret sets a generated secret and answers it once.
   rpc RotateClientSecret(RotateClientSecretRequest) returns (RotateClientSecretResponse);
+  // DeleteClientTokens deletes every token issued to a client.
+  rpc DeleteClientTokens(DeleteClientTokensRequest) returns (DeleteClientTokensResponse);
 
   rpc ListConsents(ListConsentsRequest) returns (ListConsentsResponse);
   rpc RevokeConsents(RevokeConsentsRequest) returns (RevokeConsentsResponse);
@@ -32,6 +34,9 @@ service AdminService {
   // RotateKey adds a generated key: it signs from now on, older ones still verify.
   rpc RotateKey(RotateKeyRequest) returns (RotateKeyResponse);
   rpc DeleteKey(DeleteKeyRequest) returns (DeleteKeyResponse);
+  rpc DeleteKeySet(DeleteKeySetRequest) returns (DeleteKeySetResponse);
+  // ImportKey stores a key the operator brings.
+  rpc ImportKey(ImportKeyRequest) returns (ImportKeyResponse);
 
   rpc ListTrustedIssuers(ListTrustedIssuersRequest) returns (ListTrustedIssuersResponse);
   rpc TrustIssuer(TrustIssuerRequest) returns (TrustIssuerResponse);
@@ -191,6 +196,8 @@ message RevokeConsentsResponse {}
 
 message RevokeLoginSessionsRequest {
   string subject = 1;
+  // sid narrows it to one login session.
+  string sid = 2;
 }
 
 message RevokeLoginSessionsResponse {}
@@ -271,4 +278,27 @@ message IntrospectResponse {
   google.protobuf.Timestamp expires_at = 6;
   google.protobuf.Timestamp issued_at = 7;
   string ext_json = 8;
+}
+
+message DeleteClientTokensRequest {
+  string client_id = 1;
+}
+
+message DeleteClientTokensResponse {}
+
+message DeleteKeySetRequest {
+  string set = 1;
+}
+
+message DeleteKeySetResponse {}
+
+message ImportKeyRequest {
+  string set = 1;
+  string kid = 2;
+  // jwk_json is the JSON Web Key, with its private part to sign.
+  string jwk_json = 3;
+}
+
+message ImportKeyResponse {
+  Key key = 1;
 }

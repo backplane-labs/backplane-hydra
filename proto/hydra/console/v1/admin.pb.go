@@ -1509,8 +1509,10 @@ func (*RevokeConsentsResponse) Descriptor() ([]byte, []int) {
 }
 
 type RevokeLoginSessionsRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Subject       string                 `protobuf:"bytes,1,opt,name=subject,proto3" json:"subject,omitempty"`
+	state   protoimpl.MessageState `protogen:"open.v1"`
+	Subject string                 `protobuf:"bytes,1,opt,name=subject,proto3" json:"subject,omitempty"`
+	// sid narrows it to one login session.
+	Sid           string `protobuf:"bytes,2,opt,name=sid,proto3" json:"sid,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1548,6 +1550,13 @@ func (*RevokeLoginSessionsRequest) Descriptor() ([]byte, []int) {
 func (x *RevokeLoginSessionsRequest) GetSubject() string {
 	if x != nil {
 		return x.Subject
+	}
+	return ""
+}
+
+func (x *RevokeLoginSessionsRequest) GetSid() string {
+	if x != nil {
+		return x.Sid
 	}
 	return ""
 }
@@ -2421,6 +2430,271 @@ func (x *IntrospectResponse) GetExtJson() string {
 	return ""
 }
 
+type DeleteClientTokensRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ClientId      string                 `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteClientTokensRequest) Reset() {
+	*x = DeleteClientTokensRequest{}
+	mi := &file_proto_hydra_console_v1_admin_proto_msgTypes[44]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteClientTokensRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteClientTokensRequest) ProtoMessage() {}
+
+func (x *DeleteClientTokensRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_hydra_console_v1_admin_proto_msgTypes[44]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteClientTokensRequest.ProtoReflect.Descriptor instead.
+func (*DeleteClientTokensRequest) Descriptor() ([]byte, []int) {
+	return file_proto_hydra_console_v1_admin_proto_rawDescGZIP(), []int{44}
+}
+
+func (x *DeleteClientTokensRequest) GetClientId() string {
+	if x != nil {
+		return x.ClientId
+	}
+	return ""
+}
+
+type DeleteClientTokensResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteClientTokensResponse) Reset() {
+	*x = DeleteClientTokensResponse{}
+	mi := &file_proto_hydra_console_v1_admin_proto_msgTypes[45]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteClientTokensResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteClientTokensResponse) ProtoMessage() {}
+
+func (x *DeleteClientTokensResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_hydra_console_v1_admin_proto_msgTypes[45]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteClientTokensResponse.ProtoReflect.Descriptor instead.
+func (*DeleteClientTokensResponse) Descriptor() ([]byte, []int) {
+	return file_proto_hydra_console_v1_admin_proto_rawDescGZIP(), []int{45}
+}
+
+type DeleteKeySetRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Set           string                 `protobuf:"bytes,1,opt,name=set,proto3" json:"set,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteKeySetRequest) Reset() {
+	*x = DeleteKeySetRequest{}
+	mi := &file_proto_hydra_console_v1_admin_proto_msgTypes[46]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteKeySetRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteKeySetRequest) ProtoMessage() {}
+
+func (x *DeleteKeySetRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_hydra_console_v1_admin_proto_msgTypes[46]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteKeySetRequest.ProtoReflect.Descriptor instead.
+func (*DeleteKeySetRequest) Descriptor() ([]byte, []int) {
+	return file_proto_hydra_console_v1_admin_proto_rawDescGZIP(), []int{46}
+}
+
+func (x *DeleteKeySetRequest) GetSet() string {
+	if x != nil {
+		return x.Set
+	}
+	return ""
+}
+
+type DeleteKeySetResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteKeySetResponse) Reset() {
+	*x = DeleteKeySetResponse{}
+	mi := &file_proto_hydra_console_v1_admin_proto_msgTypes[47]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteKeySetResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteKeySetResponse) ProtoMessage() {}
+
+func (x *DeleteKeySetResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_hydra_console_v1_admin_proto_msgTypes[47]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteKeySetResponse.ProtoReflect.Descriptor instead.
+func (*DeleteKeySetResponse) Descriptor() ([]byte, []int) {
+	return file_proto_hydra_console_v1_admin_proto_rawDescGZIP(), []int{47}
+}
+
+type ImportKeyRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Set   string                 `protobuf:"bytes,1,opt,name=set,proto3" json:"set,omitempty"`
+	Kid   string                 `protobuf:"bytes,2,opt,name=kid,proto3" json:"kid,omitempty"`
+	// jwk_json is the JSON Web Key, with its private part to sign.
+	JwkJson       string `protobuf:"bytes,3,opt,name=jwk_json,json=jwkJson,proto3" json:"jwk_json,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ImportKeyRequest) Reset() {
+	*x = ImportKeyRequest{}
+	mi := &file_proto_hydra_console_v1_admin_proto_msgTypes[48]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ImportKeyRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ImportKeyRequest) ProtoMessage() {}
+
+func (x *ImportKeyRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_hydra_console_v1_admin_proto_msgTypes[48]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ImportKeyRequest.ProtoReflect.Descriptor instead.
+func (*ImportKeyRequest) Descriptor() ([]byte, []int) {
+	return file_proto_hydra_console_v1_admin_proto_rawDescGZIP(), []int{48}
+}
+
+func (x *ImportKeyRequest) GetSet() string {
+	if x != nil {
+		return x.Set
+	}
+	return ""
+}
+
+func (x *ImportKeyRequest) GetKid() string {
+	if x != nil {
+		return x.Kid
+	}
+	return ""
+}
+
+func (x *ImportKeyRequest) GetJwkJson() string {
+	if x != nil {
+		return x.JwkJson
+	}
+	return ""
+}
+
+type ImportKeyResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Key           *Key                   `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ImportKeyResponse) Reset() {
+	*x = ImportKeyResponse{}
+	mi := &file_proto_hydra_console_v1_admin_proto_msgTypes[49]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ImportKeyResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ImportKeyResponse) ProtoMessage() {}
+
+func (x *ImportKeyResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_hydra_console_v1_admin_proto_msgTypes[49]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ImportKeyResponse.ProtoReflect.Descriptor instead.
+func (*ImportKeyResponse) Descriptor() ([]byte, []int) {
+	return file_proto_hydra_console_v1_admin_proto_rawDescGZIP(), []int{49}
+}
+
+func (x *ImportKeyResponse) GetKey() *Key {
+	if x != nil {
+		return x.Key
+	}
+	return nil
+}
+
 var File_proto_hydra_console_v1_admin_proto protoreflect.FileDescriptor
 
 const file_proto_hydra_console_v1_admin_proto_rawDesc = "" +
@@ -2536,9 +2810,10 @@ const file_proto_hydra_console_v1_admin_proto_rawDesc = "" +
 	"\x15RevokeConsentsRequest\x12\x18\n" +
 	"\asubject\x18\x01 \x01(\tR\asubject\x12\x1b\n" +
 	"\tclient_id\x18\x02 \x01(\tR\bclientId\"\x18\n" +
-	"\x16RevokeConsentsResponse\"6\n" +
+	"\x16RevokeConsentsResponse\"H\n" +
 	"\x1aRevokeLoginSessionsRequest\x12\x18\n" +
-	"\asubject\x18\x01 \x01(\tR\asubject\"\x1d\n" +
+	"\asubject\x18\x01 \x01(\tR\asubject\x12\x10\n" +
+	"\x03sid\x18\x02 \x01(\tR\x03sid\"\x1d\n" +
 	"\x1bRevokeLoginSessionsResponse\"M\n" +
 	"\x03Key\x12\x10\n" +
 	"\x03kid\x18\x01 \x01(\tR\x03kid\x12\x10\n" +
@@ -2590,7 +2865,19 @@ const file_proto_hydra_console_v1_admin_proto_rawDesc = "" +
 	"\n" +
 	"expires_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\x127\n" +
 	"\tissued_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\bissuedAt\x12\x19\n" +
-	"\bext_json\x18\b \x01(\tR\aextJson2\xd1\r\n" +
+	"\bext_json\x18\b \x01(\tR\aextJson\"8\n" +
+	"\x19DeleteClientTokensRequest\x12\x1b\n" +
+	"\tclient_id\x18\x01 \x01(\tR\bclientId\"\x1c\n" +
+	"\x1aDeleteClientTokensResponse\"'\n" +
+	"\x13DeleteKeySetRequest\x12\x10\n" +
+	"\x03set\x18\x01 \x01(\tR\x03set\"\x16\n" +
+	"\x14DeleteKeySetResponse\"Q\n" +
+	"\x10ImportKeyRequest\x12\x10\n" +
+	"\x03set\x18\x01 \x01(\tR\x03set\x12\x10\n" +
+	"\x03kid\x18\x02 \x01(\tR\x03kid\x12\x19\n" +
+	"\bjwk_json\x18\x03 \x01(\tR\ajwkJson\"<\n" +
+	"\x11ImportKeyResponse\x12'\n" +
+	"\x03key\x18\x01 \x01(\v2\x15.hydra.console.v1.KeyR\x03key2\xf7\x0f\n" +
 	"\fAdminService\x12T\n" +
 	"\tGetStatus\x12\".hydra.console.v1.GetStatusRequest\x1a#.hydra.console.v1.GetStatusResponse\x12W\n" +
 	"\n" +
@@ -2600,13 +2887,16 @@ const file_proto_hydra_console_v1_admin_proto_rawDesc = "" +
 	"\fCreateClient\x12%.hydra.console.v1.CreateClientRequest\x1a&.hydra.console.v1.CreateClientResponse\x12]\n" +
 	"\fUpdateClient\x12%.hydra.console.v1.UpdateClientRequest\x1a&.hydra.console.v1.UpdateClientResponse\x12]\n" +
 	"\fDeleteClient\x12%.hydra.console.v1.DeleteClientRequest\x1a&.hydra.console.v1.DeleteClientResponse\x12o\n" +
-	"\x12RotateClientSecret\x12+.hydra.console.v1.RotateClientSecretRequest\x1a,.hydra.console.v1.RotateClientSecretResponse\x12]\n" +
+	"\x12RotateClientSecret\x12+.hydra.console.v1.RotateClientSecretRequest\x1a,.hydra.console.v1.RotateClientSecretResponse\x12o\n" +
+	"\x12DeleteClientTokens\x12+.hydra.console.v1.DeleteClientTokensRequest\x1a,.hydra.console.v1.DeleteClientTokensResponse\x12]\n" +
 	"\fListConsents\x12%.hydra.console.v1.ListConsentsRequest\x1a&.hydra.console.v1.ListConsentsResponse\x12c\n" +
 	"\x0eRevokeConsents\x12'.hydra.console.v1.RevokeConsentsRequest\x1a(.hydra.console.v1.RevokeConsentsResponse\x12r\n" +
 	"\x13RevokeLoginSessions\x12,.hydra.console.v1.RevokeLoginSessionsRequest\x1a-.hydra.console.v1.RevokeLoginSessionsResponse\x12T\n" +
 	"\tGetKeySet\x12\".hydra.console.v1.GetKeySetRequest\x1a#.hydra.console.v1.GetKeySetResponse\x12T\n" +
 	"\tRotateKey\x12\".hydra.console.v1.RotateKeyRequest\x1a#.hydra.console.v1.RotateKeyResponse\x12T\n" +
-	"\tDeleteKey\x12\".hydra.console.v1.DeleteKeyRequest\x1a#.hydra.console.v1.DeleteKeyResponse\x12o\n" +
+	"\tDeleteKey\x12\".hydra.console.v1.DeleteKeyRequest\x1a#.hydra.console.v1.DeleteKeyResponse\x12]\n" +
+	"\fDeleteKeySet\x12%.hydra.console.v1.DeleteKeySetRequest\x1a&.hydra.console.v1.DeleteKeySetResponse\x12T\n" +
+	"\tImportKey\x12\".hydra.console.v1.ImportKeyRequest\x1a#.hydra.console.v1.ImportKeyResponse\x12o\n" +
 	"\x12ListTrustedIssuers\x12+.hydra.console.v1.ListTrustedIssuersRequest\x1a,.hydra.console.v1.ListTrustedIssuersResponse\x12Z\n" +
 	"\vTrustIssuer\x12$.hydra.console.v1.TrustIssuerRequest\x1a%.hydra.console.v1.TrustIssuerResponse\x12r\n" +
 	"\x13DeleteTrustedIssuer\x12,.hydra.console.v1.DeleteTrustedIssuerRequest\x1a-.hydra.console.v1.DeleteTrustedIssuerResponse\x12W\n" +
@@ -2625,7 +2915,7 @@ func file_proto_hydra_console_v1_admin_proto_rawDescGZIP() []byte {
 	return file_proto_hydra_console_v1_admin_proto_rawDescData
 }
 
-var file_proto_hydra_console_v1_admin_proto_msgTypes = make([]protoimpl.MessageInfo, 44)
+var file_proto_hydra_console_v1_admin_proto_msgTypes = make([]protoimpl.MessageInfo, 50)
 var file_proto_hydra_console_v1_admin_proto_goTypes = []any{
 	(*GetStatusRequest)(nil),            // 0: hydra.console.v1.GetStatusRequest
 	(*GetStatusResponse)(nil),           // 1: hydra.console.v1.GetStatusResponse
@@ -2671,70 +2961,83 @@ var file_proto_hydra_console_v1_admin_proto_goTypes = []any{
 	(*DeleteTrustedIssuerResponse)(nil), // 41: hydra.console.v1.DeleteTrustedIssuerResponse
 	(*IntrospectRequest)(nil),           // 42: hydra.console.v1.IntrospectRequest
 	(*IntrospectResponse)(nil),          // 43: hydra.console.v1.IntrospectResponse
-	(*timestamppb.Timestamp)(nil),       // 44: google.protobuf.Timestamp
+	(*DeleteClientTokensRequest)(nil),   // 44: hydra.console.v1.DeleteClientTokensRequest
+	(*DeleteClientTokensResponse)(nil),  // 45: hydra.console.v1.DeleteClientTokensResponse
+	(*DeleteKeySetRequest)(nil),         // 46: hydra.console.v1.DeleteKeySetRequest
+	(*DeleteKeySetResponse)(nil),        // 47: hydra.console.v1.DeleteKeySetResponse
+	(*ImportKeyRequest)(nil),            // 48: hydra.console.v1.ImportKeyRequest
+	(*ImportKeyResponse)(nil),           // 49: hydra.console.v1.ImportKeyResponse
+	(*timestamppb.Timestamp)(nil),       // 50: google.protobuf.Timestamp
 }
 var file_proto_hydra_console_v1_admin_proto_depIdxs = []int32{
 	2,  // 0: hydra.console.v1.GetStatusResponse.overlay:type_name -> hydra.console.v1.Overlay
 	3,  // 1: hydra.console.v1.GetStatusResponse.hooks:type_name -> hydra.console.v1.HookPoint
 	4,  // 2: hydra.console.v1.GetStatusResponse.callbacks:type_name -> hydra.console.v1.CallbackStat
 	5,  // 3: hydra.console.v1.GetStatusResponse.discovery:type_name -> hydra.console.v1.Discovery
-	44, // 4: hydra.console.v1.Overlay.written_at:type_name -> google.protobuf.Timestamp
-	44, // 5: hydra.console.v1.CallbackStat.last_at:type_name -> google.protobuf.Timestamp
-	44, // 6: hydra.console.v1.Client.created_at:type_name -> google.protobuf.Timestamp
+	50, // 4: hydra.console.v1.Overlay.written_at:type_name -> google.protobuf.Timestamp
+	50, // 5: hydra.console.v1.CallbackStat.last_at:type_name -> google.protobuf.Timestamp
+	50, // 6: hydra.console.v1.Client.created_at:type_name -> google.protobuf.Timestamp
 	8,  // 7: hydra.console.v1.ListClientsResponse.clients:type_name -> hydra.console.v1.Client
 	8,  // 8: hydra.console.v1.GetClientResponse.client:type_name -> hydra.console.v1.Client
 	8,  // 9: hydra.console.v1.CreateClientResponse.client:type_name -> hydra.console.v1.Client
 	8,  // 10: hydra.console.v1.UpdateClientResponse.client:type_name -> hydra.console.v1.Client
-	44, // 11: hydra.console.v1.Consent.handled_at:type_name -> google.protobuf.Timestamp
+	50, // 11: hydra.console.v1.Consent.handled_at:type_name -> google.protobuf.Timestamp
 	21, // 12: hydra.console.v1.ListConsentsResponse.consents:type_name -> hydra.console.v1.Consent
 	28, // 13: hydra.console.v1.GetKeySetResponse.keys:type_name -> hydra.console.v1.Key
 	28, // 14: hydra.console.v1.RotateKeyResponse.keys:type_name -> hydra.console.v1.Key
-	44, // 15: hydra.console.v1.TrustedIssuer.expires_at:type_name -> google.protobuf.Timestamp
+	50, // 15: hydra.console.v1.TrustedIssuer.expires_at:type_name -> google.protobuf.Timestamp
 	35, // 16: hydra.console.v1.ListTrustedIssuersResponse.issuers:type_name -> hydra.console.v1.TrustedIssuer
 	35, // 17: hydra.console.v1.TrustIssuerResponse.issuer:type_name -> hydra.console.v1.TrustedIssuer
-	44, // 18: hydra.console.v1.IntrospectResponse.expires_at:type_name -> google.protobuf.Timestamp
-	44, // 19: hydra.console.v1.IntrospectResponse.issued_at:type_name -> google.protobuf.Timestamp
-	0,  // 20: hydra.console.v1.AdminService.GetStatus:input_type -> hydra.console.v1.GetStatusRequest
-	6,  // 21: hydra.console.v1.AdminService.GetOverlay:input_type -> hydra.console.v1.GetOverlayRequest
-	9,  // 22: hydra.console.v1.AdminService.ListClients:input_type -> hydra.console.v1.ListClientsRequest
-	11, // 23: hydra.console.v1.AdminService.GetClient:input_type -> hydra.console.v1.GetClientRequest
-	13, // 24: hydra.console.v1.AdminService.CreateClient:input_type -> hydra.console.v1.CreateClientRequest
-	15, // 25: hydra.console.v1.AdminService.UpdateClient:input_type -> hydra.console.v1.UpdateClientRequest
-	17, // 26: hydra.console.v1.AdminService.DeleteClient:input_type -> hydra.console.v1.DeleteClientRequest
-	19, // 27: hydra.console.v1.AdminService.RotateClientSecret:input_type -> hydra.console.v1.RotateClientSecretRequest
-	22, // 28: hydra.console.v1.AdminService.ListConsents:input_type -> hydra.console.v1.ListConsentsRequest
-	24, // 29: hydra.console.v1.AdminService.RevokeConsents:input_type -> hydra.console.v1.RevokeConsentsRequest
-	26, // 30: hydra.console.v1.AdminService.RevokeLoginSessions:input_type -> hydra.console.v1.RevokeLoginSessionsRequest
-	29, // 31: hydra.console.v1.AdminService.GetKeySet:input_type -> hydra.console.v1.GetKeySetRequest
-	31, // 32: hydra.console.v1.AdminService.RotateKey:input_type -> hydra.console.v1.RotateKeyRequest
-	33, // 33: hydra.console.v1.AdminService.DeleteKey:input_type -> hydra.console.v1.DeleteKeyRequest
-	36, // 34: hydra.console.v1.AdminService.ListTrustedIssuers:input_type -> hydra.console.v1.ListTrustedIssuersRequest
-	38, // 35: hydra.console.v1.AdminService.TrustIssuer:input_type -> hydra.console.v1.TrustIssuerRequest
-	40, // 36: hydra.console.v1.AdminService.DeleteTrustedIssuer:input_type -> hydra.console.v1.DeleteTrustedIssuerRequest
-	42, // 37: hydra.console.v1.AdminService.Introspect:input_type -> hydra.console.v1.IntrospectRequest
-	1,  // 38: hydra.console.v1.AdminService.GetStatus:output_type -> hydra.console.v1.GetStatusResponse
-	7,  // 39: hydra.console.v1.AdminService.GetOverlay:output_type -> hydra.console.v1.GetOverlayResponse
-	10, // 40: hydra.console.v1.AdminService.ListClients:output_type -> hydra.console.v1.ListClientsResponse
-	12, // 41: hydra.console.v1.AdminService.GetClient:output_type -> hydra.console.v1.GetClientResponse
-	14, // 42: hydra.console.v1.AdminService.CreateClient:output_type -> hydra.console.v1.CreateClientResponse
-	16, // 43: hydra.console.v1.AdminService.UpdateClient:output_type -> hydra.console.v1.UpdateClientResponse
-	18, // 44: hydra.console.v1.AdminService.DeleteClient:output_type -> hydra.console.v1.DeleteClientResponse
-	20, // 45: hydra.console.v1.AdminService.RotateClientSecret:output_type -> hydra.console.v1.RotateClientSecretResponse
-	23, // 46: hydra.console.v1.AdminService.ListConsents:output_type -> hydra.console.v1.ListConsentsResponse
-	25, // 47: hydra.console.v1.AdminService.RevokeConsents:output_type -> hydra.console.v1.RevokeConsentsResponse
-	27, // 48: hydra.console.v1.AdminService.RevokeLoginSessions:output_type -> hydra.console.v1.RevokeLoginSessionsResponse
-	30, // 49: hydra.console.v1.AdminService.GetKeySet:output_type -> hydra.console.v1.GetKeySetResponse
-	32, // 50: hydra.console.v1.AdminService.RotateKey:output_type -> hydra.console.v1.RotateKeyResponse
-	34, // 51: hydra.console.v1.AdminService.DeleteKey:output_type -> hydra.console.v1.DeleteKeyResponse
-	37, // 52: hydra.console.v1.AdminService.ListTrustedIssuers:output_type -> hydra.console.v1.ListTrustedIssuersResponse
-	39, // 53: hydra.console.v1.AdminService.TrustIssuer:output_type -> hydra.console.v1.TrustIssuerResponse
-	41, // 54: hydra.console.v1.AdminService.DeleteTrustedIssuer:output_type -> hydra.console.v1.DeleteTrustedIssuerResponse
-	43, // 55: hydra.console.v1.AdminService.Introspect:output_type -> hydra.console.v1.IntrospectResponse
-	38, // [38:56] is the sub-list for method output_type
-	20, // [20:38] is the sub-list for method input_type
-	20, // [20:20] is the sub-list for extension type_name
-	20, // [20:20] is the sub-list for extension extendee
-	0,  // [0:20] is the sub-list for field type_name
+	50, // 18: hydra.console.v1.IntrospectResponse.expires_at:type_name -> google.protobuf.Timestamp
+	50, // 19: hydra.console.v1.IntrospectResponse.issued_at:type_name -> google.protobuf.Timestamp
+	28, // 20: hydra.console.v1.ImportKeyResponse.key:type_name -> hydra.console.v1.Key
+	0,  // 21: hydra.console.v1.AdminService.GetStatus:input_type -> hydra.console.v1.GetStatusRequest
+	6,  // 22: hydra.console.v1.AdminService.GetOverlay:input_type -> hydra.console.v1.GetOverlayRequest
+	9,  // 23: hydra.console.v1.AdminService.ListClients:input_type -> hydra.console.v1.ListClientsRequest
+	11, // 24: hydra.console.v1.AdminService.GetClient:input_type -> hydra.console.v1.GetClientRequest
+	13, // 25: hydra.console.v1.AdminService.CreateClient:input_type -> hydra.console.v1.CreateClientRequest
+	15, // 26: hydra.console.v1.AdminService.UpdateClient:input_type -> hydra.console.v1.UpdateClientRequest
+	17, // 27: hydra.console.v1.AdminService.DeleteClient:input_type -> hydra.console.v1.DeleteClientRequest
+	19, // 28: hydra.console.v1.AdminService.RotateClientSecret:input_type -> hydra.console.v1.RotateClientSecretRequest
+	44, // 29: hydra.console.v1.AdminService.DeleteClientTokens:input_type -> hydra.console.v1.DeleteClientTokensRequest
+	22, // 30: hydra.console.v1.AdminService.ListConsents:input_type -> hydra.console.v1.ListConsentsRequest
+	24, // 31: hydra.console.v1.AdminService.RevokeConsents:input_type -> hydra.console.v1.RevokeConsentsRequest
+	26, // 32: hydra.console.v1.AdminService.RevokeLoginSessions:input_type -> hydra.console.v1.RevokeLoginSessionsRequest
+	29, // 33: hydra.console.v1.AdminService.GetKeySet:input_type -> hydra.console.v1.GetKeySetRequest
+	31, // 34: hydra.console.v1.AdminService.RotateKey:input_type -> hydra.console.v1.RotateKeyRequest
+	33, // 35: hydra.console.v1.AdminService.DeleteKey:input_type -> hydra.console.v1.DeleteKeyRequest
+	46, // 36: hydra.console.v1.AdminService.DeleteKeySet:input_type -> hydra.console.v1.DeleteKeySetRequest
+	48, // 37: hydra.console.v1.AdminService.ImportKey:input_type -> hydra.console.v1.ImportKeyRequest
+	36, // 38: hydra.console.v1.AdminService.ListTrustedIssuers:input_type -> hydra.console.v1.ListTrustedIssuersRequest
+	38, // 39: hydra.console.v1.AdminService.TrustIssuer:input_type -> hydra.console.v1.TrustIssuerRequest
+	40, // 40: hydra.console.v1.AdminService.DeleteTrustedIssuer:input_type -> hydra.console.v1.DeleteTrustedIssuerRequest
+	42, // 41: hydra.console.v1.AdminService.Introspect:input_type -> hydra.console.v1.IntrospectRequest
+	1,  // 42: hydra.console.v1.AdminService.GetStatus:output_type -> hydra.console.v1.GetStatusResponse
+	7,  // 43: hydra.console.v1.AdminService.GetOverlay:output_type -> hydra.console.v1.GetOverlayResponse
+	10, // 44: hydra.console.v1.AdminService.ListClients:output_type -> hydra.console.v1.ListClientsResponse
+	12, // 45: hydra.console.v1.AdminService.GetClient:output_type -> hydra.console.v1.GetClientResponse
+	14, // 46: hydra.console.v1.AdminService.CreateClient:output_type -> hydra.console.v1.CreateClientResponse
+	16, // 47: hydra.console.v1.AdminService.UpdateClient:output_type -> hydra.console.v1.UpdateClientResponse
+	18, // 48: hydra.console.v1.AdminService.DeleteClient:output_type -> hydra.console.v1.DeleteClientResponse
+	20, // 49: hydra.console.v1.AdminService.RotateClientSecret:output_type -> hydra.console.v1.RotateClientSecretResponse
+	45, // 50: hydra.console.v1.AdminService.DeleteClientTokens:output_type -> hydra.console.v1.DeleteClientTokensResponse
+	23, // 51: hydra.console.v1.AdminService.ListConsents:output_type -> hydra.console.v1.ListConsentsResponse
+	25, // 52: hydra.console.v1.AdminService.RevokeConsents:output_type -> hydra.console.v1.RevokeConsentsResponse
+	27, // 53: hydra.console.v1.AdminService.RevokeLoginSessions:output_type -> hydra.console.v1.RevokeLoginSessionsResponse
+	30, // 54: hydra.console.v1.AdminService.GetKeySet:output_type -> hydra.console.v1.GetKeySetResponse
+	32, // 55: hydra.console.v1.AdminService.RotateKey:output_type -> hydra.console.v1.RotateKeyResponse
+	34, // 56: hydra.console.v1.AdminService.DeleteKey:output_type -> hydra.console.v1.DeleteKeyResponse
+	47, // 57: hydra.console.v1.AdminService.DeleteKeySet:output_type -> hydra.console.v1.DeleteKeySetResponse
+	49, // 58: hydra.console.v1.AdminService.ImportKey:output_type -> hydra.console.v1.ImportKeyResponse
+	37, // 59: hydra.console.v1.AdminService.ListTrustedIssuers:output_type -> hydra.console.v1.ListTrustedIssuersResponse
+	39, // 60: hydra.console.v1.AdminService.TrustIssuer:output_type -> hydra.console.v1.TrustIssuerResponse
+	41, // 61: hydra.console.v1.AdminService.DeleteTrustedIssuer:output_type -> hydra.console.v1.DeleteTrustedIssuerResponse
+	43, // 62: hydra.console.v1.AdminService.Introspect:output_type -> hydra.console.v1.IntrospectResponse
+	42, // [42:63] is the sub-list for method output_type
+	21, // [21:42] is the sub-list for method input_type
+	21, // [21:21] is the sub-list for extension type_name
+	21, // [21:21] is the sub-list for extension extendee
+	0,  // [0:21] is the sub-list for field type_name
 }
 
 func init() { file_proto_hydra_console_v1_admin_proto_init() }
@@ -2748,7 +3051,7 @@ func file_proto_hydra_console_v1_admin_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_hydra_console_v1_admin_proto_rawDesc), len(file_proto_hydra_console_v1_admin_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   44,
+			NumMessages:   50,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

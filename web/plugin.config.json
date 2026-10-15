@@ -6,6 +6,7 @@
     { "path": "subjects", "labelKey": "subjects" },
     { "path": "keys", "labelKey": "keys" },
     { "path": "issuers", "labelKey": "issuers" },
-    { "path": "tokens", "labelKey": "tokens" }
+    { "path": "tokens", "labelKey": "tokens" },
+    { "path": "settings", "labelKey": "settingsNav" }
   ]
 }

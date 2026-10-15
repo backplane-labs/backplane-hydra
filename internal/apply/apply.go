@@ -37,6 +37,7 @@ type Applier struct {
 	path     string
 	mode     os.FileMode
 	settings config.Live[overlay.Settings]
+	salt     config.Live[config.Secret]
 	flows    *flows.Flows
 	wiring   overlay.Wiring
 
@@ -66,6 +67,7 @@ func New(
 	path string,
 	mode os.FileMode,
 	settings config.Live[overlay.Settings],
+	salt config.Live[config.Secret],
 	f *flows.Flows,
 	w overlay.Wiring,
 ) *Applier {
@@ -73,12 +75,13 @@ func New(
 		Component: deps.NewComponent(
 			parent,
 			"overlay",
-		), path: path, mode: mode, settings: settings, flows: f, wiring: w,
+		), path: path, mode: mode, settings: settings, salt: salt, flows: f, wiring: w,
 		kick: make(chan struct{}, 1), state: State{Path: path},
 	}
 	a.wiring.Bound = f.Bound
 
 	settings.Watch(func(overlay.Settings) { a.Kick() })
+	salt.Watch(func(config.Secret) { a.Kick() })
 	a.Go(a.loop)
 
 	return a
@@ -116,7 +119,7 @@ func (a *Applier) Ready(context.Context) error {
 
 // Render is the overlay for the current settings, validated.
 func (a *Applier) Render() ([]byte, error) {
-	doc, err := overlay.Render(a.settings.Get(), a.wiring)
+	doc, err := overlay.Render(a.settings.Get(), overlay.Secrets{PairwiseSalt: a.salt.Get().Reveal()}, a.wiring)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +133,7 @@ func (a *Applier) Render() ([]byte, error) {
 
 // Validate checks candidate settings as the applier would render them.
 func (a *Applier) Validate(s overlay.Settings) error {
-	doc, err := overlay.Render(s, a.wiring)
+	doc, err := overlay.Render(s, overlay.Secrets{PairwiseSalt: a.salt.Get().Reveal()}, a.wiring)
 	if err != nil {
 		return err
 	}
@@ -212,15 +215,15 @@ func (a *Applier) apply(ctx context.Context) {
 // Masked is the overlay for the current settings with every secret (the
 // pairwise salt, the callbacks key) masked.
 func (a *Applier) Masked() ([]byte, error) {
-	s := a.settings.Get()
-	if s.OIDC.PairwiseSalt.Reveal() != "" {
-		s.OIDC.PairwiseSalt = mask
+	sec := overlay.Secrets{}
+	if a.salt.Get().Reveal() != "" {
+		sec.PairwiseSalt = mask
 	}
 
 	w := a.wiring
 	w.Key = mask
 
-	doc, err := overlay.Render(s, w)
+	doc, err := overlay.Render(a.settings.Get(), sec, w)
 	if err != nil {
 		return nil, err
 	}

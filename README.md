@@ -16,14 +16,19 @@ service sits next to it:
   `LoggedOut` — wire it to `kratos.RevokeSessions` to end the identity's
   sessions too. Consents publish `ConsentGranted`.
 - **Admin API → activities**: `CreateClient` (answers the secret),
-  `GetClient`, `ListClients`, `UpdateClient`, `DeleteClient`, `ListConsents`,
+  `GetClient`, `ListClients`, `UpdateClient`, `PatchClient`, `SetClientLifespans`,
+  `DeleteClient`, `ListConsents`,
   `RevokeConsents`, `RevokeLoginSessions`, the login/consent/logout request
-  steps for products with their own UI, `IntrospectToken`, `DeleteTokens`;
+  steps for products with their own UI (and `RejectLogoutRequest`,
+  `AcceptDeviceRequest`), `IntrospectToken`, `DeleteTokens`, key sets
+  (`GetKeySet`, `RotateKey`, `ImportKey`, `DeleteKey`, `DeleteKeySet`), trusted
+  issuers (`ListTrustedIssuers`, `TrustIssuer`, `DeleteTrustedIssuer`);
   client changes publish `ClientCreated/Updated/Deleted`.
-- **Console module**: Hydra's state and discovery, clients (JSON editor with
-  completion and checks, secrets shown once, rotation), a subject's consents
-  and login sessions, signing keys with rotation, trusted JWT issuers, token
-  introspection. Every operator change is application audit.
+- **Console module**: Hydra's state and discovery, clients (Hydra's own JSON
+  with completion and checks, secrets shown once, rotation, token deletion), a
+  subject's consents and login sessions, key sets (rotation, import, deletion),
+  trusted JWT issuers, token introspection, and a Settings page that saves
+  revisions of this service's configuration. Every operator change is application audit.
 - **Settings from the console**: issuer, login/registration/error URLs, TTLs,
   token strategies, PKCE, claims, consent defaults, OIDC subject types,
   refresh rotation — live.
@@ -61,7 +66,8 @@ model; `dsn`, `serve`, `secrets` stay the deployment's.
 | `public_url` | This service as browsers reach it (Hydra redirects them to its `/consent`, `/logout`) |
 | `callbacks.listen`, `callbacks.url`, `callbacks.key` | Where Hydra calls the token hook (default `:8091`) |
 | `overlay`, `overlay_mode` | The overlay file and its permissions |
-| `settings` | Live: the Hydra settings above |
+| `settings` | Live: the Hydra settings above, edited on the module's Settings page |
+| `pairwise_salt` | Live secret kept apart from the settings |
 
 ## Develop
 

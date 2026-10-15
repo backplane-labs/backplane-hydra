@@ -123,6 +123,7 @@ func start(t *testing.T, bind func(*backplanetest.Harness, *flows.Flows)) env {
 		path,
 		0o644,
 		e.settings,
+		config.LiveOf(config.Secret("")),
 		e.flows,
 		overlay.Wiring{PublicURL: public, CallbacksURL: callbacks, Key: key},
 	)
@@ -162,18 +163,16 @@ func waitFor(t *testing.T, what string, cond func() bool) {
 func (e env) newClient(t *testing.T, skipConsent bool) ory.OAuth2Client {
 	t.Helper()
 
-	c, err := backplanetest.Activity[ory.OAuth2Client, ory.OAuth2Client](
-		t.Context(),
-		e.h,
-		"CreateClient",
-		ory.OAuth2Client{
-			ClientName: "it", GrantTypes: []string{"authorization_code", "refresh_token"}, ResponseTypes: []string{"code"},
-			RedirectURIs: []string{
-				e.callback,
-			}, Scope: "openid offline_access email", TokenEndpointAuthMethod: "client_secret_post",
-			SkipConsent: skipConsent,
-		},
-	)
+	body, _ := json.Marshal(map[string]any{ //nolint:errchkjson // plain values
+		"client_name": "it", "grant_types": []string{"authorization_code", "refresh_token"}, "response_types": []string{"code"},
+		"redirect_uris": []string{
+			e.callback,
+		}, "scope": "openid offline_access email", "token_endpoint_auth_method": "client_secret_post",
+		"skip_consent": skipConsent,
+	})
+
+	c, err := backplanetest.Activity[activities.ClientIn, ory.OAuth2Client](t.Context(), e.h, "CreateClient",
+		activities.ClientIn{Client: body})
 	if err != nil || c.ClientSecret == "" {
 		t.Fatalf("create client: %+v %v", c, err)
 	}
@@ -412,5 +411,86 @@ func TestClients(t *testing.T) {
 	deleted := backplanetest.Events(e.h, e.activities.ClientEvents("ClientDeleted"))
 	if len(deleted) != 1 || deleted[0].ClientID != c.ClientID {
 		t.Fatalf("deleted: %+v", deleted)
+	}
+}
+
+// Saving a client keeps every field Hydra has, not only those this
+// service models (the console edits Hydra's own JSON).
+func TestClientRoundTrip(t *testing.T) {
+	t.Parallel()
+
+	e := start(t, nil)
+	ctx := t.Context()
+	c := e.newClient(t, false)
+
+	if _, err := backplanetest.Activity[activities.LifespansIn, ory.OAuth2Client](ctx, e.h, "SetClientLifespans", activities.LifespansIn{
+		ClientID: c.ClientID, Lifespans: map[string]string{"authorization_code_grant_access_token_lifespan": "15m0s"},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := e.hydra.GetClient(ctx, c.ClientID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var raw map[string]any
+	if err := json.Unmarshal(got.WithoutSecret(), &raw); err != nil {
+		t.Fatal(err)
+	}
+
+	raw["client_name"] = "renamed"
+	body, _ := json.Marshal(raw) //nolint:errchkjson // decoded JSON
+
+	if _, err := backplanetest.Activity[activities.ClientIn, ory.OAuth2Client](ctx, e.h, "UpdateClient",
+		activities.ClientIn{ClientID: c.ClientID, Client: body}); err != nil {
+		t.Fatal(err)
+	}
+
+	after, err := e.hydra.GetClient(ctx, c.ClientID)
+	if err != nil || after.ClientName != "renamed" ||
+		!strings.Contains(string(after.Raw), `"authorization_code_grant_access_token_lifespan":"15m0s"`) {
+		t.Fatalf("round trip lost fields: %s %v", after.Raw, err)
+	}
+}
+
+// Keys: a rotation adds a signing key; a set of one's own can be deleted.
+func TestKeys(t *testing.T) {
+	t.Parallel()
+
+	e := start(t, nil)
+	ctx := t.Context()
+	set := fmt.Sprintf("it.keys.%d", time.Now().UnixNano())
+
+	first, err := backplanetest.Activity[activities.RotateKeyIn, activities.KeysOut](
+		ctx,
+		e.h,
+		"RotateKey",
+		activities.RotateKeyIn{Set: set, Alg: "ES256"},
+	)
+	if err != nil || len(first.Keys) != 1 || first.Keys[0].Alg != "ES256" {
+		t.Fatalf("rotate: %+v %v", first, err)
+	}
+
+	if _, err := backplanetest.Activity[activities.RotateKeyIn, activities.KeysOut](ctx, e.h, "RotateKey", activities.RotateKeyIn{Set: set, Alg: "ES256"}); err != nil {
+		t.Fatal(err)
+	}
+
+	keys, err := backplanetest.Activity[activities.KeySetIn, activities.KeysOut](
+		ctx,
+		e.h,
+		"GetKeySet",
+		activities.KeySetIn{Set: set},
+	)
+	if err != nil || len(keys.Keys) != 2 {
+		t.Fatalf("set: %+v %v", keys, err)
+	}
+
+	if _, err := backplanetest.Activity[activities.KeySetIn, activities.Empty](ctx, e.h, "DeleteKeySet", activities.KeySetIn{Set: set}); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := e.hydra.GetKeySet(ctx, set); !ory.IsNotFound(err) {
+		t.Fatalf("set still there: %v", err)
 	}
 }

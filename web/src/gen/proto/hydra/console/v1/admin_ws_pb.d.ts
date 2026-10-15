@@ -3,7 +3,7 @@
 /* eslint-disable */
 
 import { WsTransport } from "@gopherex/ws-proto-transport";
-import type { CreateClientRequest, CreateClientResponse, DeleteClientRequest, DeleteClientResponse, DeleteKeyRequest, DeleteKeyResponse, DeleteTrustedIssuerRequest, DeleteTrustedIssuerResponse, GetClientRequest, GetClientResponse, GetKeySetRequest, GetKeySetResponse, GetOverlayRequest, GetOverlayResponse, GetStatusRequest, GetStatusResponse, IntrospectRequest, IntrospectResponse, ListClientsRequest, ListClientsResponse, ListConsentsRequest, ListConsentsResponse, ListTrustedIssuersRequest, ListTrustedIssuersResponse, RevokeConsentsRequest, RevokeConsentsResponse, RevokeLoginSessionsRequest, RevokeLoginSessionsResponse, RotateClientSecretRequest, RotateClientSecretResponse, RotateKeyRequest, RotateKeyResponse, TrustIssuerRequest, TrustIssuerResponse, UpdateClientRequest, UpdateClientResponse } from "./admin_pb";
+import type { CreateClientRequest, CreateClientResponse, DeleteClientRequest, DeleteClientResponse, DeleteClientTokensRequest, DeleteClientTokensResponse, DeleteKeyRequest, DeleteKeyResponse, DeleteKeySetRequest, DeleteKeySetResponse, DeleteTrustedIssuerRequest, DeleteTrustedIssuerResponse, GetClientRequest, GetClientResponse, GetKeySetRequest, GetKeySetResponse, GetOverlayRequest, GetOverlayResponse, GetStatusRequest, GetStatusResponse, ImportKeyRequest, ImportKeyResponse, IntrospectRequest, IntrospectResponse, ListClientsRequest, ListClientsResponse, ListConsentsRequest, ListConsentsResponse, ListTrustedIssuersRequest, ListTrustedIssuersResponse, RevokeConsentsRequest, RevokeConsentsResponse, RevokeLoginSessionsRequest, RevokeLoginSessionsResponse, RotateClientSecretRequest, RotateClientSecretResponse, RotateKeyRequest, RotateKeyResponse, TrustIssuerRequest, TrustIssuerResponse, UpdateClientRequest, UpdateClientResponse } from "./admin_pb";
 export interface CallOptions {
     /** Request metadata sent as headers on the opening frame. */
     headers?: Record<string, string>;
@@ -67,6 +67,12 @@ export declare class AdminServiceClient {
      */
     rotateClientSecret(req: RotateClientSecretRequest, options?: CallOptions): Promise<RotateClientSecretResponse>;
     /**
+     * DeleteClientTokens deletes every token issued to a client.
+     *
+     * @generated from rpc hydra.console.v1.AdminService.DeleteClientTokens
+     */
+    deleteClientTokens(req: DeleteClientTokensRequest, options?: CallOptions): Promise<DeleteClientTokensResponse>;
+    /**
      * @generated from rpc hydra.console.v1.AdminService.ListConsents
      */
     listConsents(req: ListConsentsRequest, options?: CallOptions): Promise<ListConsentsResponse>;
@@ -92,6 +98,16 @@ export declare class AdminServiceClient {
      * @generated from rpc hydra.console.v1.AdminService.DeleteKey
      */
     deleteKey(req: DeleteKeyRequest, options?: CallOptions): Promise<DeleteKeyResponse>;
+    /**
+     * @generated from rpc hydra.console.v1.AdminService.DeleteKeySet
+     */
+    deleteKeySet(req: DeleteKeySetRequest, options?: CallOptions): Promise<DeleteKeySetResponse>;
+    /**
+     * ImportKey stores a key the operator brings.
+     *
+     * @generated from rpc hydra.console.v1.AdminService.ImportKey
+     */
+    importKey(req: ImportKeyRequest, options?: CallOptions): Promise<ImportKeyResponse>;
     /**
      * @generated from rpc hydra.console.v1.AdminService.ListTrustedIssuers
      */

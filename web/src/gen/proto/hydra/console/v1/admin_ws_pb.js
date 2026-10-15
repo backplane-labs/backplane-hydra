@@ -3,7 +3,7 @@
 /* eslint-disable */
 
 import { applyUnaryCallbacks } from "@gopherex/ws-proto-transport";
-import { CreateClientRequestSchema, CreateClientResponseSchema, DeleteClientRequestSchema, DeleteClientResponseSchema, DeleteKeyRequestSchema, DeleteKeyResponseSchema, DeleteTrustedIssuerRequestSchema, DeleteTrustedIssuerResponseSchema, GetClientRequestSchema, GetClientResponseSchema, GetKeySetRequestSchema, GetKeySetResponseSchema, GetOverlayRequestSchema, GetOverlayResponseSchema, GetStatusRequestSchema, GetStatusResponseSchema, IntrospectRequestSchema, IntrospectResponseSchema, ListClientsRequestSchema, ListClientsResponseSchema, ListConsentsRequestSchema, ListConsentsResponseSchema, ListTrustedIssuersRequestSchema, ListTrustedIssuersResponseSchema, RevokeConsentsRequestSchema, RevokeConsentsResponseSchema, RevokeLoginSessionsRequestSchema, RevokeLoginSessionsResponseSchema, RotateClientSecretRequestSchema, RotateClientSecretResponseSchema, RotateKeyRequestSchema, RotateKeyResponseSchema, TrustIssuerRequestSchema, TrustIssuerResponseSchema, UpdateClientRequestSchema, UpdateClientResponseSchema } from "./admin_pb";
+import { CreateClientRequestSchema, CreateClientResponseSchema, DeleteClientRequestSchema, DeleteClientResponseSchema, DeleteClientTokensRequestSchema, DeleteClientTokensResponseSchema, DeleteKeyRequestSchema, DeleteKeyResponseSchema, DeleteKeySetRequestSchema, DeleteKeySetResponseSchema, DeleteTrustedIssuerRequestSchema, DeleteTrustedIssuerResponseSchema, GetClientRequestSchema, GetClientResponseSchema, GetKeySetRequestSchema, GetKeySetResponseSchema, GetOverlayRequestSchema, GetOverlayResponseSchema, GetStatusRequestSchema, GetStatusResponseSchema, ImportKeyRequestSchema, ImportKeyResponseSchema, IntrospectRequestSchema, IntrospectResponseSchema, ListClientsRequestSchema, ListClientsResponseSchema, ListConsentsRequestSchema, ListConsentsResponseSchema, ListTrustedIssuersRequestSchema, ListTrustedIssuersResponseSchema, RevokeConsentsRequestSchema, RevokeConsentsResponseSchema, RevokeLoginSessionsRequestSchema, RevokeLoginSessionsResponseSchema, RotateClientSecretRequestSchema, RotateClientSecretResponseSchema, RotateKeyRequestSchema, RotateKeyResponseSchema, TrustIssuerRequestSchema, TrustIssuerResponseSchema, UpdateClientRequestSchema, UpdateClientResponseSchema } from "./admin_pb";
 const AdminService_GetStatus = {
     typeName: "hydra.console.v1.AdminService",
     name: "GetStatus",
@@ -60,6 +60,13 @@ const AdminService_RotateClientSecret = {
     input: RotateClientSecretRequestSchema,
     output: RotateClientSecretResponseSchema,
 };
+const AdminService_DeleteClientTokens = {
+    typeName: "hydra.console.v1.AdminService",
+    name: "DeleteClientTokens",
+    kind: "unary",
+    input: DeleteClientTokensRequestSchema,
+    output: DeleteClientTokensResponseSchema,
+};
 const AdminService_ListConsents = {
     typeName: "hydra.console.v1.AdminService",
     name: "ListConsents",
@@ -101,6 +108,20 @@ const AdminService_DeleteKey = {
     kind: "unary",
     input: DeleteKeyRequestSchema,
     output: DeleteKeyResponseSchema,
+};
+const AdminService_DeleteKeySet = {
+    typeName: "hydra.console.v1.AdminService",
+    name: "DeleteKeySet",
+    kind: "unary",
+    input: DeleteKeySetRequestSchema,
+    output: DeleteKeySetResponseSchema,
+};
+const AdminService_ImportKey = {
+    typeName: "hydra.console.v1.AdminService",
+    name: "ImportKey",
+    kind: "unary",
+    input: ImportKeyRequestSchema,
+    output: ImportKeyResponseSchema,
 };
 const AdminService_ListTrustedIssuers = {
     typeName: "hydra.console.v1.AdminService",
@@ -206,6 +227,15 @@ export class AdminServiceClient {
         return applyUnaryCallbacks(res, options);
     }
     /**
+     * DeleteClientTokens deletes every token issued to a client.
+     *
+     * @generated from rpc hydra.console.v1.AdminService.DeleteClientTokens
+     */
+    async deleteClientTokens(req, options) {
+        const res = await this.transport.unary(AdminService_DeleteClientTokens, req, { headers: options === null || options === void 0 ? void 0 : options.headers, signal: options === null || options === void 0 ? void 0 : options.signal, timeoutMs: options === null || options === void 0 ? void 0 : options.timeoutMs });
+        return applyUnaryCallbacks(res, options);
+    }
+    /**
      * @generated from rpc hydra.console.v1.AdminService.ListConsents
      */
     async listConsents(req, options) {
@@ -247,6 +277,22 @@ export class AdminServiceClient {
      */
     async deleteKey(req, options) {
         const res = await this.transport.unary(AdminService_DeleteKey, req, { headers: options === null || options === void 0 ? void 0 : options.headers, signal: options === null || options === void 0 ? void 0 : options.signal, timeoutMs: options === null || options === void 0 ? void 0 : options.timeoutMs });
+        return applyUnaryCallbacks(res, options);
+    }
+    /**
+     * @generated from rpc hydra.console.v1.AdminService.DeleteKeySet
+     */
+    async deleteKeySet(req, options) {
+        const res = await this.transport.unary(AdminService_DeleteKeySet, req, { headers: options === null || options === void 0 ? void 0 : options.headers, signal: options === null || options === void 0 ? void 0 : options.signal, timeoutMs: options === null || options === void 0 ? void 0 : options.timeoutMs });
+        return applyUnaryCallbacks(res, options);
+    }
+    /**
+     * ImportKey stores a key the operator brings.
+     *
+     * @generated from rpc hydra.console.v1.AdminService.ImportKey
+     */
+    async importKey(req, options) {
+        const res = await this.transport.unary(AdminService_ImportKey, req, { headers: options === null || options === void 0 ? void 0 : options.headers, signal: options === null || options === void 0 ? void 0 : options.signal, timeoutMs: options === null || options === void 0 ? void 0 : options.timeoutMs });
         return applyUnaryCallbacks(res, options);
     }
     /**

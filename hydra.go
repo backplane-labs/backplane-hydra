@@ -52,6 +52,9 @@ type Config struct {
 	Overlay string `json:"overlay,omitempty" schemapb:"description=Path of the overlay file Hydra loads (empty: snippets only)"`
 	// OverlayMode is the file's permission bits (octal).
 	OverlayMode string `json:"overlay_mode,omitempty" schemapb:"default=0644"`
+	// PairwiseSalt salts pairwise subject identifiers; live, kept apart
+	// from the settings.
+	PairwiseSalt config.Live[config.Secret] `json:"pairwise_salt,omitempty" schemapb:"description=Salt of pairwise subject identifiers"`
 	// Settings are Hydra's settings rendered into the overlay; live.
 	Settings config.Live[overlay.Settings] `json:"settings"`
 }
@@ -78,7 +81,7 @@ type Callbacks struct {
 func (c *Config) Validate() error {
 	every := func(string) bool { return true }
 
-	doc, err := overlay.Render(c.Settings.Get(), overlay.Wiring{
+	doc, err := overlay.Render(c.Settings.Get(), overlay.Secrets{}, overlay.Wiring{
 		PublicURL: c.PublicURL, CallbacksURL: c.Callbacks.URL, Key: "k", Bound: every,
 	})
 	if err != nil {
@@ -196,9 +199,17 @@ func newState(root backplane.Root[Config]) (*State, error) {
 		callbacks: cfg.Callbacks.Listen,
 	}
 	st.Flows = flows.New(root, client, key, cfg.Settings)
-	st.Applier = apply.New(root, cfg.Overlay, os.FileMode(mode), cfg.Settings, st.Flows, overlay.Wiring{
-		PublicURL: cfg.PublicURL, CallbacksURL: cfg.Callbacks.URL, Key: key,
-	})
+	st.Applier = apply.New(
+		root,
+		cfg.Overlay,
+		os.FileMode(mode),
+		cfg.Settings,
+		cfg.PairwiseSalt,
+		st.Flows,
+		overlay.Wiring{
+			PublicURL: cfg.PublicURL, CallbacksURL: cfg.Callbacks.URL, Key: key,
+		},
+	)
 	st.Activities = activities.New(root, client)
 	st.Admin = admin.New(root, client, st.Flows, st.Applier, cfg.PublicURL)
 
