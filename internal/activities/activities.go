@@ -138,7 +138,7 @@ type Empty struct{}
 type ClientIn struct {
 	// ClientID of the client to replace (UpdateClient).
 	ClientID string          `json:"client_id,omitempty"`
-	Client   json.RawMessage `json:"client"              schemapb:"description=Hydra's client JSON (grant_types, redirect_uris, scope, …)"`
+	Client   json.RawMessage `json:"client"              schemapb:"secret=true;description=Hydra's client JSON (grant_types, redirect_uris, scope, …)"`
 }
 
 func (a *Activities) createClient(ctx context.Context, in ClientIn) (ory.OAuth2Client, error) {
@@ -207,7 +207,7 @@ func (a *Activities) updateClient(ctx context.Context, in ClientIn) (ory.OAuth2C
 // PatchClientIn is a JSON Patch of a client.
 type PatchClientIn struct {
 	ClientID string          `json:"client_id"`
-	Patch    json.RawMessage `json:"patch"     schemapb:"description=RFC 6902 operations, e.g. [{op: add, path: /redirect_uris/-, value: …}]"`
+	Patch    json.RawMessage `json:"patch"     schemapb:"secret=true;description=RFC 6902 operations, e.g. [{op: add, path: /redirect_uris/-, value: …}]"`
 }
 
 func (a *Activities) patchClient(ctx context.Context, in PatchClientIn) (ory.OAuth2Client, error) {
