@@ -1,0 +1,13 @@
+# Local development: the Hydra of `make it-up` (34444/34445), the overlay it
+# loads, the local Backplane stack (`make run`).
+hydra:
+  admin_url: http://127.0.0.1:34445
+  public_url: http://127.0.0.1:34444
+public_url: http://127.0.0.1:8089
+callbacks:
+  listen: ":8091"
+  url: http://127.0.0.1:8091
+overlay: /tmp/backplane-hydra-it/overlay.yml
+settings:
+  issuer: http://127.0.0.1:34444/
+  login_url: http://127.0.0.1:4455/login

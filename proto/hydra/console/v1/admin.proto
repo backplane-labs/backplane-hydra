@@ -1,0 +1,274 @@
+syntax = "proto3";
+
+package hydra.console.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/backplane-labs/backplane-hydra/proto/hydra/console/v1;hydraconsolev1";
+
+// AdminService is the console module's API: the Hydra installation's
+// state, its OAuth 2.0 clients, subjects' consents, signing keys and
+// trusted issuers. Clients travel as Hydra's own JSON.
+service AdminService {
+  // GetStatus is the installation, the overlay, the hooks and the discovery check.
+  rpc GetStatus(GetStatusRequest) returns (GetStatusResponse);
+  // GetOverlay is the rendered overlay, secrets masked.
+  rpc GetOverlay(GetOverlayRequest) returns (GetOverlayResponse);
+
+  rpc ListClients(ListClientsRequest) returns (ListClientsResponse);
+  rpc GetClient(GetClientRequest) returns (GetClientResponse);
+  // CreateClient answers the client secret: the only time it is shown.
+  rpc CreateClient(CreateClientRequest) returns (CreateClientResponse);
+  rpc UpdateClient(UpdateClientRequest) returns (UpdateClientResponse);
+  rpc DeleteClient(DeleteClientRequest) returns (DeleteClientResponse);
+  // RotateClientSecret sets a generated secret and answers it once.
+  rpc RotateClientSecret(RotateClientSecretRequest) returns (RotateClientSecretResponse);
+
+  rpc ListConsents(ListConsentsRequest) returns (ListConsentsResponse);
+  rpc RevokeConsents(RevokeConsentsRequest) returns (RevokeConsentsResponse);
+  rpc RevokeLoginSessions(RevokeLoginSessionsRequest) returns (RevokeLoginSessionsResponse);
+
+  rpc GetKeySet(GetKeySetRequest) returns (GetKeySetResponse);
+  // RotateKey adds a generated key: it signs from now on, older ones still verify.
+  rpc RotateKey(RotateKeyRequest) returns (RotateKeyResponse);
+  rpc DeleteKey(DeleteKeyRequest) returns (DeleteKeyResponse);
+
+  rpc ListTrustedIssuers(ListTrustedIssuersRequest) returns (ListTrustedIssuersResponse);
+  rpc TrustIssuer(TrustIssuerRequest) returns (TrustIssuerResponse);
+  rpc DeleteTrustedIssuer(DeleteTrustedIssuerRequest) returns (DeleteTrustedIssuerResponse);
+
+  // Introspect reports a token's state.
+  rpc Introspect(IntrospectRequest) returns (IntrospectResponse);
+}
+
+message GetStatusRequest {}
+
+message GetStatusResponse {
+  string admin_url = 1;
+  string public_url = 2;
+  string version = 3;
+  // problem is why Hydra is not ready; empty when it is.
+  string problem = 4;
+  Overlay overlay = 5;
+  repeated HookPoint hooks = 6;
+  repeated CallbackStat callbacks = 7;
+  Discovery discovery = 8;
+  // consent_url and logout_url are backplane-hydra's endpoints Hydra must redirect to.
+  string consent_url = 9;
+  string logout_url = 10;
+}
+
+message Overlay {
+  string path = 1;
+  string hash = 2;
+  google.protobuf.Timestamp written_at = 3;
+  string error = 4;
+}
+
+message HookPoint {
+  string name = 1;
+  string description = 2;
+  bool bound = 3;
+}
+
+message CallbackStat {
+  string point = 1;
+  uint64 calls = 2;
+  uint64 failures = 3;
+  google.protobuf.Timestamp last_at = 4;
+  string last_outcome = 5;
+  string last_error = 6;
+  double last_latency_ms = 7;
+}
+
+message Discovery {
+  string issuer = 1;
+  string authorization_endpoint = 2;
+  string token_endpoint = 3;
+  string jwks_uri = 4;
+  // error is why the discovery document could not be read.
+  string error = 5;
+}
+
+message GetOverlayRequest {}
+
+message GetOverlayResponse {
+  string content = 1;
+  string error = 2;
+}
+
+message Client {
+  string client_id = 1;
+  string client_name = 2;
+  repeated string grant_types = 3;
+  repeated string redirect_uris = 4;
+  string scope = 5;
+  bool skip_consent = 6;
+  string token_endpoint_auth_method = 7;
+  string owner = 8;
+  google.protobuf.Timestamp created_at = 9;
+  // client_json is the whole client as Hydra stores it (no secret).
+  string client_json = 10;
+}
+
+message ListClientsRequest {
+  string name = 1;
+  int32 page_size = 2;
+  string page_token = 3;
+}
+
+message ListClientsResponse {
+  repeated Client clients = 1;
+  string next_page_token = 2;
+}
+
+message GetClientRequest {
+  string client_id = 1;
+}
+
+message GetClientResponse {
+  Client client = 1;
+}
+
+message CreateClientRequest {
+  // client_json is Hydra's client JSON; client_id and secret are generated when absent.
+  string client_json = 1;
+}
+
+message CreateClientResponse {
+  Client client = 1;
+  string client_secret = 2;
+}
+
+message UpdateClientRequest {
+  string client_id = 1;
+  string client_json = 2;
+}
+
+message UpdateClientResponse {
+  Client client = 1;
+}
+
+message DeleteClientRequest {
+  string client_id = 1;
+}
+
+message DeleteClientResponse {}
+
+message RotateClientSecretRequest {
+  string client_id = 1;
+}
+
+message RotateClientSecretResponse {
+  string client_secret = 1;
+}
+
+message Consent {
+  string client_id = 1;
+  string client_name = 2;
+  repeated string grant_scope = 3;
+  repeated string grant_audience = 4;
+  bool remember = 5;
+  int64 remember_for = 6;
+  google.protobuf.Timestamp handled_at = 7;
+}
+
+message ListConsentsRequest {
+  string subject = 1;
+}
+
+message ListConsentsResponse {
+  repeated Consent consents = 1;
+}
+
+message RevokeConsentsRequest {
+  string subject = 1;
+  // client_id: that client only; empty: every client.
+  string client_id = 2;
+}
+
+message RevokeConsentsResponse {}
+
+message RevokeLoginSessionsRequest {
+  string subject = 1;
+}
+
+message RevokeLoginSessionsResponse {}
+
+message Key {
+  string kid = 1;
+  string alg = 2;
+  string use = 3;
+  string kty = 4;
+}
+
+message GetKeySetRequest {
+  string set = 1;
+}
+
+message GetKeySetResponse {
+  repeated Key keys = 1;
+}
+
+message RotateKeyRequest {
+  string set = 1;
+  string alg = 2;
+  string use = 3;
+}
+
+message RotateKeyResponse {
+  repeated Key keys = 1;
+}
+
+message DeleteKeyRequest {
+  string set = 1;
+  string kid = 2;
+}
+
+message DeleteKeyResponse {}
+
+message TrustedIssuer {
+  string id = 1;
+  string issuer = 2;
+  string subject = 3;
+  bool allow_any_subject = 4;
+  repeated string scope = 5;
+  google.protobuf.Timestamp expires_at = 6;
+  string key_id = 7;
+}
+
+message ListTrustedIssuersRequest {}
+
+message ListTrustedIssuersResponse {
+  repeated TrustedIssuer issuers = 1;
+}
+
+message TrustIssuerRequest {
+  // issuer_json is Hydra's trustOAuth2JwtGrantIssuer.
+  string issuer_json = 1;
+}
+
+message TrustIssuerResponse {
+  TrustedIssuer issuer = 1;
+}
+
+message DeleteTrustedIssuerRequest {
+  string id = 1;
+}
+
+message DeleteTrustedIssuerResponse {}
+
+message IntrospectRequest {
+  string token = 1;
+}
+
+message IntrospectResponse {
+  bool active = 1;
+  string subject = 2;
+  string client_id = 3;
+  string scope = 4;
+  string token_use = 5;
+  google.protobuf.Timestamp expires_at = 6;
+  google.protobuf.Timestamp issued_at = 7;
+  string ext_json = 8;
+}

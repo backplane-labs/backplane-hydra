@@ -1,0 +1,45 @@
+# Values of the official Ory Hydra chart (https://k8s.ory.sh/helm/hydra)
+# running backplane-hydra as a native sidecar: it starts first, writes the
+# overlay, and Hydra loads it after its own configuration.
+hydra:
+  automigration:
+    enabled: true
+  config:
+    # The deployment's part: database, listeners, secrets, logs.
+    dsn: postgres://hydra:…@postgres:5432/hydra?sslmode=require
+    secrets:
+      system: [change-me-a-long-system-secret]
+    urls:
+      self:
+        issuer: https://auth.example.com/   # or set it in the console (settings.issuer)
+
+deployment:
+  extraArgs: ["--config", "/etc/backplane/hydra.yml"]
+  extraVolumes:
+    - name: backplane-overlay
+      emptyDir: {medium: Memory}
+  extraVolumeMounts:
+    - name: backplane-overlay
+      mountPath: /etc/backplane
+      readOnly: true
+  extraInitContainers: |
+    - name: backplane-hydra
+      image: ghcr.io/backplane-labs/backplane-hydra:latest
+      restartPolicy: Always
+      env:
+        - {name: BACKPLANE_CONSUL_ADDR, value: consul:8500}
+        - {name: BACKPLANE_NATS_URL, value: nats://nats:4222}
+        - {name: BACKPLANE_INTERNAL_SECRET, valueFrom: {secretKeyRef: {name: backplane, key: internal-secret}}}
+        - {name: BACKPLANE_ADVERTISE, valueFrom: {fieldRef: {fieldPath: status.podIP}}}
+        - {name: HYDRA_HYDRA_ADMIN_URL, value: http://127.0.0.1:4445}
+        - {name: HYDRA_HYDRA_PUBLIC_URL, value: http://127.0.0.1:4444}
+        # Browsers reach the consent and logout endpoints here (an ingress
+        # route to this container's public port).
+        - {name: HYDRA_PUBLIC_URL, value: https://auth.example.com/bp}
+        - {name: HYDRA_OVERLAY, value: /etc/backplane/hydra.yml}
+      volumeMounts:
+        - {name: backplane-overlay, mountPath: /etc/backplane}
+      startupProbe:
+        httpGet: {path: /healthz/startup, port: 9400}
+        periodSeconds: 1
+        failureThreshold: 120

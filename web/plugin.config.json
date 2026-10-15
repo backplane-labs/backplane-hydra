@@ -1,0 +1,11 @@
+{
+  "service": "hydra",
+  "nav": [
+    { "path": "", "labelKey": "overview" },
+    { "path": "clients", "labelKey": "clients" },
+    { "path": "subjects", "labelKey": "subjects" },
+    { "path": "keys", "labelKey": "keys" },
+    { "path": "issuers", "labelKey": "issuers" },
+    { "path": "tokens", "labelKey": "tokens" }
+  ]
+}

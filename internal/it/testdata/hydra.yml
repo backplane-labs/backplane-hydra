@@ -1,0 +1,12 @@
+# The deployment's base file of the integration tests (dsn, serve,
+# secrets); backplane-hydra writes the overlay.
+dsn: memory
+serve:
+  public: {host: 127.0.0.1, port: 34444}
+  admin: {host: 127.0.0.1, port: 34445}
+urls:
+  self:
+    issuer: http://127.0.0.1:34444/
+secrets:
+  system: [integration-tests-system-secret-0123456789]
+log: {level: info, format: json}
