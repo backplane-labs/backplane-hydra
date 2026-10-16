@@ -49,6 +49,36 @@ result:
   id_token_claims: {email: identity.traits.email}
 ```
 
+## Who a token speaks for: `pkg/auth`
+
+A service verifies Hydra's access tokens without a token cache, so every
+replica answers alike:
+
+- **JWT access tokens** (the default strategy): verified locally against
+  Hydra's public keys (`<issuer>/.well-known/jwks.json`) — no call per
+  request. A revoked token stays valid until it expires (`ttl.access_token`).
+  An ID token, signed with the same keys, is refused: it carries no
+  `client_id`.
+- **Introspection**: any access token, opaque or JWT, asked of Hydra's admin
+  API on every request — no cache: a revocation shows on the next request.
+  Refresh tokens are refused.
+
+```go
+tokens, _ := auth.NewTokens(auth.TokensOptions{Issuer: "https://auth.example.com/"})
+introspection, _ := auth.NewIntrospection("http://hydra:4445", nil, nil)
+a := auth.Authenticator{Tokens: tokens, Introspection: introspection}
+
+mux.Handle("/api/", a.Required(api))
+// in a handler:
+who, _ := auth.FromContext(r.Context()) // who.Subject, who.ClientID, who.HasScope("orders.read"), who.Extra
+```
+
+The claims the consent and `hydra.TokenClaims` add are in `Extra` (Hydra's
+`ext`), and in `Claims` too when they are mirrored to the top level. The only
+cache is of the public keys: fetched on first use, again on a token with an
+unknown kid (at most once per 30s) and in the background every 10m; when the
+keys cannot be fetched, the last good set keeps verifying.
+
 ## How Hydra picks up the settings
 
 As with backplane-kratos: Hydra runs with the deployment's file and an

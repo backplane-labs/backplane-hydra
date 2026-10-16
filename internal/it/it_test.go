@@ -81,6 +81,13 @@ func listen(t *testing.T, h http.Handler) string {
 func start(t *testing.T, bind func(*backplanetest.Harness, *flows.Flows)) env {
 	t.Helper()
 
+	return startWith(t, nil, bind)
+}
+
+// startWith is start with the settings changed by edit.
+func startWith(t *testing.T, edit func(*overlay.Settings), bind func(*backplanetest.Harness, *flows.Flows)) env {
+	t.Helper()
+
 	path := os.Getenv("HYDRA_IT_OVERLAY")
 	if path == "" {
 		t.Skip("HYDRA_IT_OVERLAY not set: make it-up it")
@@ -109,6 +116,10 @@ func start(t *testing.T, bind func(*backplanetest.Harness, *flows.Flows)) env {
 
 	settings := defaults()
 	settings.LoginURL = login + "/login"
+
+	if edit != nil {
+		edit(&settings)
+	}
 
 	h := backplanetest.New(t, backplanetest.Name("hydra"))
 	e := env{h: h, hydra: client, settings: config.LiveOf(settings), callback: "http://127.0.0.1:1/cb"}

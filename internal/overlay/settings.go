@@ -46,8 +46,9 @@ type TTL struct {
 
 // Tokens are the token strategies.
 type Tokens struct {
-	// AccessToken is opaque or jwt.
-	AccessToken string `json:"access_token,omitempty" schemapb:"default={\"stringValue\":\"opaque\"}" validate:"oneof=opaque jwt"`
+	// AccessToken is jwt (services verify it locally with Hydra's keys,
+	// pkg/auth) or opaque (services ask Hydra's introspection each time).
+	AccessToken string `json:"access_token,omitempty" schemapb:"default={\"stringValue\":\"jwt\"}" validate:"oneof=opaque jwt"`
 	// Scope is how requested scopes match the allowed ones.
 	Scope string `json:"scope,omitempty" schemapb:"default={\"stringValue\":\"wildcard\"}" validate:"oneof=wildcard exact"`
 }
