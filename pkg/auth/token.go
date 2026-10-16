@@ -29,7 +29,10 @@ type TokensOptions struct {
 	Issuer string
 	// KeysURL is Hydra's public keys; empty: <Issuer>/.well-known/jwks.json.
 	KeysURL string
-	// Audience is a value tokens' aud must hold. Empty: not checked.
+	// Audience is a value tokens' aud must hold. Empty: not checked — then
+	// a token Hydra issued for another API of the installation is accepted
+	// too (its signature and issuer still are checked); set it when one
+	// Hydra serves several APIs and have clients request the audience.
 	Audience string
 	// Leeway is the clock skew tolerated on exp, nbf and iat. Default 30s.
 	Leeway time.Duration
@@ -107,9 +110,31 @@ type claims struct {
 	Extra    map[string]any `json:"ext"`
 }
 
+// idTokenClaims are claims Hydra puts into ID tokens and never into access
+// tokens; a consent may add claims to an ID token but not take these away.
+//
+//nolint:gochecknoglobals // constant list
+var idTokenClaims = []string{"auth_time", "at_hash", "nonce", "c_hash"}
+
+// accessToken refuses claims that are not an access token's.
+func accessToken(c claims, all map[string]any) error {
+	if c.ClientID == "" || c.Expiry == nil || all["scp"] == nil {
+		return fmt.Errorf("%w: not an access token (client_id, scp and exp are required)", ErrInvalid)
+	}
+
+	for _, claim := range idTokenClaims {
+		if _, ok := all[claim]; ok {
+			return fmt.Errorf("%w: an ID token (it carries %s), not an access token", ErrInvalid, claim)
+		}
+	}
+
+	return nil
+}
+
 // Verify checks token's signature and claims and returns what it grants.
-// An ID token, signed with Hydra's keys too, is refused: it carries no
-// client_id.
+// An ID token, signed with Hydra's keys too, is refused: an access token
+// carries client_id and scp, an ID token auth_time (and at_hash, nonce),
+// which no consent can remove.
 func (t *Tokens) Verify(ctx context.Context, token string) (Auth, error) {
 	parsed, err := jwt.ParseSigned(token, algorithms)
 	if err != nil {
@@ -153,8 +178,8 @@ func (t *Tokens) Verify(ctx context.Context, token string) (Auth, error) {
 		return Auth{}, fmt.Errorf("%w: %w", ErrInvalid, err)
 	}
 
-	if c.ClientID == "" || c.Expiry == nil {
-		return Auth{}, fmt.Errorf("%w: not an access token (client_id and exp are required)", ErrInvalid)
+	if err := accessToken(c, all); err != nil {
+		return Auth{}, err
 	}
 
 	a := Auth{

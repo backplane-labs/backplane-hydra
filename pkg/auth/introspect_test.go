@@ -94,6 +94,16 @@ func TestIntrospectionAsksEveryTime(t *testing.T) {
 	if _, err := in.Verify(ctx, "refresh"); !errors.Is(err, auth.ErrInvalid) {
 		t.Fatalf("refresh token: %v", err)
 	}
+
+	revoked.Store(false)
+
+	if _, err := in.WithAudience("api").Verify(ctx, "good"); err != nil {
+		t.Fatalf("own audience: %v", err)
+	}
+
+	if _, err := in.WithAudience("billing").Verify(ctx, "good"); !errors.Is(err, auth.ErrInvalid) {
+		t.Fatalf("another audience: %v", err)
+	}
 }
 
 func TestMiddleware(t *testing.T) {

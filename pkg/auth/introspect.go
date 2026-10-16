@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 	"time"
 )
@@ -17,6 +18,15 @@ type Introspection struct {
 	endpoint string
 	client   *http.Client
 	headers  map[string]string
+	audience string
+}
+
+// WithAudience is i requiring tokens whose aud holds audience (see
+// TokensOptions.Audience).
+func (i Introspection) WithAudience(audience string) Introspection {
+	i.audience = audience
+
+	return i
 }
 
 // NewIntrospection asks Hydra's admin API at adminURL (as this service
@@ -103,6 +113,10 @@ func (i Introspection) Verify(ctx context.Context, token string, scopes ...strin
 	// A refresh token is active too, but it authenticates nothing.
 	if in.TokenUse != "" && in.TokenUse != "access_token" {
 		return Auth{}, fmt.Errorf("%w: a %s, not an access token", ErrInvalid, in.TokenUse)
+	}
+
+	if i.audience != "" && !slices.Contains(in.Audience, i.audience) {
+		return Auth{}, fmt.Errorf("%w: not meant for %s", ErrInvalid, i.audience)
 	}
 
 	return Auth{

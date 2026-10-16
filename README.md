@@ -57,8 +57,9 @@ replica answers alike:
 - **JWT access tokens** (the default strategy): verified locally against
   Hydra's public keys (`<issuer>/.well-known/jwks.json`) — no call per
   request. A revoked token stays valid until it expires (`ttl.access_token`).
-  An ID token, signed with the same keys, is refused: it carries no
-  `client_id`.
+  An ID token, signed with the same keys, is refused: an access token
+  carries `client_id` and `scp`, an ID token `auth_time` (and `at_hash`,
+  `nonce`), which no consent can remove.
 - **Introspection**: any access token, opaque or JWT, asked of Hydra's admin
   API on every request — no cache: a revocation shows on the next request.
   Refresh tokens are refused.
@@ -72,6 +73,12 @@ mux.Handle("/api/", a.Required(api))
 // in a handler:
 who, _ := auth.FromContext(r.Context()) // who.Subject, who.ClientID, who.HasScope("orders.read"), who.Extra
 ```
+
+Audience: without `Audience` (and `Introspection.WithAudience`) a token Hydra
+issued for another API of the same installation is accepted too — its
+signature and issuer are still checked. Hydra issues `aud: []` unless a client
+asks for an audience, so the check is opt-in: set it when one Hydra serves
+several APIs.
 
 The claims the consent and `hydra.TokenClaims` add are in `Extra` (Hydra's
 `ext`), and in `Claims` too when they are mirrored to the top level. The only

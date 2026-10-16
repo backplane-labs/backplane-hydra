@@ -174,12 +174,15 @@ func TestTokenRefusals(t *testing.T) {
 		token string
 		want  error
 	}{
-		"expired":     {issuer.sign("k1", session(now, map[string]any{"exp": now.Add(-time.Minute).Unix()})), auth.ErrExpired},
-		"not yet":     {issuer.sign("k1", session(now, map[string]any{"nbf": now.Add(time.Minute).Unix()})), auth.ErrExpired},
-		"keyIssuer":   {issuer.sign("k1", session(now, map[string]any{"iss": "https://evil.example"})), auth.ErrInvalid},
-		"id token":    {issuer.sign("k1", session(now, map[string]any{"client_id": ""})), auth.ErrInvalid},
-		"garbage":     {"a.b.c", auth.ErrInvalid},
-		"foreign key": {issuer.sign("k1", nil), auth.ErrInvalid},
+		"expired":   {issuer.sign("k1", session(now, map[string]any{"exp": now.Add(-time.Minute).Unix()})), auth.ErrExpired},
+		"not yet":   {issuer.sign("k1", session(now, map[string]any{"nbf": now.Add(time.Minute).Unix()})), auth.ErrExpired},
+		"keyIssuer": {issuer.sign("k1", session(now, map[string]any{"iss": "https://evil.example"})), auth.ErrInvalid},
+		"id token":  {issuer.sign("k1", session(now, map[string]any{"client_id": ""})), auth.ErrInvalid},
+		"no scp":    {issuer.sign("k1", session(now, map[string]any{"scp": nil})), auth.ErrInvalid},
+		// A consent added client_id and scp to an ID token: auth_time gives it away.
+		"dressed id token": {issuer.sign("k1", session(now, map[string]any{"auth_time": now.Unix(), "at_hash": "x"})), auth.ErrInvalid},
+		"garbage":          {"a.b.c", auth.ErrInvalid},
+		"foreign key":      {issuer.sign("k1", nil), auth.ErrInvalid},
 	}
 
 	// A token signed by another key under a published kid.
