@@ -149,7 +149,7 @@ func Run(ctx context.Context) error {
 	st := svc.State()
 
 	svc.HTTP("/", st.Flows.Public())
-	svc.HTTP("/", st.Flows.Callbacks(), api.Listen(st.callbacks))
+	svc.HTTP("/", st.Flows.Callbacks(), api.Listen("callbacks", st.callbacks))
 	svc.Internal(func(r grpc.ServiceRegistrar) { hydraconsolev1.RegisterAdminServiceServer(r, st.Admin) })
 
 	if bundle := ui.Bundle(); bundle != nil {
