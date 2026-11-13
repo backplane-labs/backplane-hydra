@@ -269,7 +269,9 @@ func failPage(w http.ResponseWriter, status int, msg string) {
 
 func (f *Flows) consentStep(w http.ResponseWriter, r *http.Request) {
 	start, ctx := time.Now(), r.Context()
-	challenge := r.URL.Query().Get("consent_challenge")
+	// The challenge is an opaque URL-safe token; escaping it here bounds the
+	// request input before it enters Hydra's admin API and the redirect back.
+	challenge := url.QueryEscape(r.URL.Query().Get("consent_challenge"))
 
 	if challenge == "" {
 		f.record("consent", start, "bad_request", ErrNoChallenge)
@@ -417,7 +419,9 @@ func (f *Flows) accept(
 
 func (f *Flows) logoutStep(w http.ResponseWriter, r *http.Request) {
 	start, ctx := time.Now(), r.Context()
-	challenge := r.URL.Query().Get("logout_challenge")
+	// The challenge is an opaque URL-safe token; escaping it here bounds the
+	// request input before it enters Hydra's admin API and the redirect back.
+	challenge := url.QueryEscape(r.URL.Query().Get("logout_challenge"))
 
 	if challenge == "" {
 		f.record("logout", start, "bad_request", ErrNoChallenge)

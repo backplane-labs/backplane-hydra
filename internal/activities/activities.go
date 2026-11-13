@@ -21,6 +21,9 @@ import (
 
 const timeout = 15 * time.Second
 
+// byWiring: the event's cause is the wiring itself, not a person.
+const byWiring = "wiring"
+
 // Activities are the admin API as activities.
 type Activities struct {
 	deps.Component
@@ -147,7 +150,7 @@ func (a *Activities) createClient(ctx context.Context, in ClientIn) (ory.OAuth2C
 		return out, failure(err)
 	}
 
-	a.publish(ctx, a.clientCreated, ClientEvent{ClientID: out.ClientID, ClientName: out.ClientName, By: "wiring"})
+	a.publish(ctx, a.clientCreated, ClientEvent{ClientID: out.ClientID, ClientName: out.ClientName, By: byWiring})
 
 	return out, nil
 }
@@ -199,7 +202,7 @@ func (a *Activities) updateClient(ctx context.Context, in ClientIn) (ory.OAuth2C
 		return out, failure(err)
 	}
 
-	a.publish(ctx, a.clientUpdated, ClientEvent{ClientID: out.ClientID, ClientName: out.ClientName, By: "wiring"})
+	a.publish(ctx, a.clientUpdated, ClientEvent{ClientID: out.ClientID, ClientName: out.ClientName, By: byWiring})
 
 	return out, nil
 }
@@ -216,7 +219,7 @@ func (a *Activities) patchClient(ctx context.Context, in PatchClientIn) (ory.OAu
 		return out, failure(err)
 	}
 
-	a.publish(ctx, a.clientUpdated, ClientEvent{ClientID: out.ClientID, ClientName: out.ClientName, By: "wiring"})
+	a.publish(ctx, a.clientUpdated, ClientEvent{ClientID: out.ClientID, ClientName: out.ClientName, By: byWiring})
 
 	return out, nil
 }
@@ -352,7 +355,7 @@ func (a *Activities) deleteClient(ctx context.Context, in ClientIDIn) (Empty, er
 		return Empty{}, failure(err)
 	}
 
-	a.publish(ctx, a.clientDeleted, ClientEvent{ClientID: in.ClientID, By: "wiring"})
+	a.publish(ctx, a.clientDeleted, ClientEvent{ClientID: in.ClientID, By: byWiring})
 
 	return Empty{}, nil
 }
@@ -396,7 +399,7 @@ func (a *Activities) revokeConsents(ctx context.Context, in SubjectIn) (Empty, e
 		return Empty{}, failure(err)
 	}
 
-	if err := a.consentRevoked.Publish(ctx, ConsentRevoked{Subject: in.Subject, ClientID: in.ClientID, By: "wiring"},
+	if err := a.consentRevoked.Publish(ctx, ConsentRevoked{Subject: in.Subject, ClientID: in.ClientID, By: byWiring},
 		event.Key(in.Subject)); err != nil {
 		a.Log().Ctx().Warn(ctx, "consent event not published", xlog.Err(err))
 	}
