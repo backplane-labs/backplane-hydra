@@ -311,6 +311,14 @@ linters:
       - legacy
       - std-error-handling
     rules:
+      # Hydra's admin API takes the login/consent/logout challenge exactly as
+      # Hydra issued it (an escaped one is not found) and answers the redirect
+      # target itself: the G710 taint from the challenge to http.Redirect is
+      # the library's contract, not an open redirect.
+      - linters:
+          - gosec
+        path: internal/flows/flows\.go
+        text: G710
       # Struct tags carry schema descriptions; they read better on one line.
       - linters:
           - lll
