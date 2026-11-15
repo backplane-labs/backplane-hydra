@@ -105,7 +105,7 @@ func revokeToken(t *testing.T, clientID, secret, token string) {
 	req, _ := http.NewRequestWithContext(t.Context(), http.MethodPost, publicURL+"/oauth2/revoke", strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	res, err := http.DefaultClient.Do(req)
+	res, err := httpClient(t).Do(req)
 	if err != nil {
 		t.Fatal(err)
 	}

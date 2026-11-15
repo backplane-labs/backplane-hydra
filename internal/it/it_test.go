@@ -259,7 +259,7 @@ func exchange(t *testing.T, c ory.OAuth2Client, code, callback string) map[strin
 	)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	res, err := http.DefaultClient.Do(req)
+	res, err := httpClient(t).Do(req)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -504,4 +504,15 @@ func TestKeys(t *testing.T) {
 	if _, err := e.hydra.GetKeySet(ctx, set); !ory.IsNotFound(err) {
 		t.Fatalf("set still there: %v", err)
 	}
+}
+
+// httpClient is a test's own HTTP client: on the shared default transport,
+// another test's server Close (CloseIdleConnections) breaks its requests.
+func httpClient(t *testing.T) *http.Client {
+	t.Helper()
+
+	transport := &http.Transport{}
+	t.Cleanup(transport.CloseIdleConnections)
+
+	return &http.Client{Transport: transport}
 }
