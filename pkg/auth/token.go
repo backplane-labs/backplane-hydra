@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-jose/go-jose/v4"
 	"github.com/go-jose/go-jose/v4/jwt"
+	"go.opentelemetry.io/otel"
 )
 
 // Tokens verifies JWT access tokens locally against Hydra's public keys.
@@ -88,7 +89,7 @@ func NewTokens(o TokensOptions) (*Tokens, error) {
 	}
 
 	if o.HTTPClient == nil {
-		o.HTTPClient = &http.Client{Timeout: defaultTimeout}
+		o.HTTPClient = tracedClient(otel.GetTextMapPropagator())
 	}
 
 	if o.Now == nil {

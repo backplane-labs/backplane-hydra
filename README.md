@@ -86,6 +86,13 @@ cache is of the public keys: fetched on first use, again on a token with an
 unknown kid (at most once per 30s) and in the background every 10m; when the
 keys cannot be fetched, the last good set keeps verifying.
 
+## Tracing
+
+Every call this service makes to Hydra's admin and public APIs, and every
+call `pkg/auth` makes with its default client (introspection, keys), is a
+client span (method, host and status, never the path) that carries the trace
+context: Hydra, part of the installation, continues it.
+
 ## How Hydra picks up the settings
 
 As with backplane-kratos: Hydra runs with the deployment's file and an

@@ -10,6 +10,8 @@ import (
 	"slices"
 	"strings"
 	"time"
+
+	"go.opentelemetry.io/otel"
 )
 
 // Introspection asks Hydra's admin API about a token on every call: no
@@ -38,7 +40,7 @@ func NewIntrospection(adminURL string, headers map[string]string, client *http.C
 	}
 
 	if client == nil {
-		client = &http.Client{Timeout: defaultTimeout}
+		client = tracedClient(otel.GetTextMapPropagator())
 	}
 
 	return Introspection{
