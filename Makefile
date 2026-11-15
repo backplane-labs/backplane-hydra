@@ -162,21 +162,29 @@ release: ## Create and push a version tag; no local builds or tests
 # Integration tests run against a real Hydra (host network: it redirects
 # browsers to the test's endpoints on 127.0.0.1).
 HYDRA_IMAGE ?= oryd/hydra:v26.2.0
+DB_IMAGE    ?= postgres:17-alpine
 IT_DIR      ?= /tmp/backplane-hydra-it
+# Hydra's database: an in-memory one vanishes with its last pooled
+# connection, mid-suite.
+IT_HYDRA_DSN ?= postgres://postgres:it@127.0.0.1:34432/postgres?sslmode=disable
 
 .PHONY: it-up
-it-up: ## Start the Hydra of the integration tests (docker, host network)
+it-up: ## Start the Hydra and the PostgreSQL of the integration tests (docker, host network)
 	mkdir -p "$(IT_DIR)" && echo '{}' > "$(IT_DIR)/overlay.yml" && chmod 0777 "$(IT_DIR)"
-	docker rm -f backplane-hydra-it >/dev/null 2>&1 || true
-	docker run -d --name backplane-hydra-it --network host \
+	docker rm -f backplane-hydra-it backplane-hydra-it-db >/dev/null 2>&1 || true
+	docker run -d --name backplane-hydra-it-db --network host -e POSTGRES_PASSWORD=it -e PGPORT=34432 $(DB_IMAGE)
+	for i in $$(seq 1 60); do docker exec backplane-hydra-it-db pg_isready -q -U postgres -p 34432 && break; sleep 1; done
+	docker run --rm --network host -e DSN="$(IT_HYDRA_DSN)" -v "$(CURDIR)/internal/it/testdata:/etc/hydra:ro" \
+	  $(HYDRA_IMAGE) migrate sql up -e --yes -c /etc/hydra/hydra.yml
+	docker run -d --name backplane-hydra-it --network host -e DSN="$(IT_HYDRA_DSN)" \
 	  -v "$(CURDIR)/internal/it/testdata:/etc/hydra:ro" -v "$(IT_DIR):/etc/backplane" \
 	  $(HYDRA_IMAGE) serve all --dev -c /etc/hydra/hydra.yml -c /etc/backplane/overlay.yml
 	for i in $$(seq 1 60); do curl -sf http://127.0.0.1:34445/health/ready >/dev/null && exit 0; sleep 1; done; \
 	  docker logs backplane-hydra-it; exit 1
 
 .PHONY: it-down
-it-down: ## Stop the Hydra of the integration tests
-	docker rm -f backplane-hydra-it >/dev/null 2>&1 || true
+it-down: ## Stop the Hydra and the PostgreSQL of the integration tests
+	docker rm -f backplane-hydra-it backplane-hydra-it-db >/dev/null 2>&1 || true
 
 .PHONY: it
 it: ## Integration tests against the Hydra of it-up

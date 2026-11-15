@@ -1,5 +1,6 @@
 # The deployment's base file of the integration tests (dsn, serve,
 # secrets); backplane-hydra writes the overlay.
+# dsn: replaced by the stand's PostgreSQL (DSN of make it-up).
 dsn: memory
 serve:
   public: {host: 127.0.0.1, port: 34444}
