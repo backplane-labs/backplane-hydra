@@ -1,4 +1,4 @@
-export default {
+export const english = {
   overview: 'Overview',
   clients: 'Clients',
   subjects: 'Subjects',

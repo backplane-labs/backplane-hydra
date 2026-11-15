@@ -60,6 +60,7 @@ import {
 import { AdminServiceClient } from './gen/proto/hydra/console/v1/admin_ws_pb';
 import navigation from './navigation';
 import { Settings } from './settings';
+import type { Json } from './settings-kit';
 
 const mono = { fontFamily: 'var(--font-mono)' } as const;
 const muted = { color: 'var(--muted-foreground)', fontSize: 12 } as const;
@@ -77,13 +78,16 @@ function Loading() {
     </Stack>
   );
 }
-function Failure({ error }: { error: unknown }) {
+/** The error value the platform's query and action hooks report. */
+type PlatformError = ReturnType<typeof usePlatformQuery>['error'];
+
+function Failure({ error }: { error: PlatformError }) {
   const t = useText();
   return (
     <EmptyState role="alert" title={t('error')} description={error instanceof Error ? error.message : String(error)} />
   );
 }
-function ActionError({ error }: { error: unknown }) {
+function ActionError({ error }: { error: PlatformError }) {
   if (error === undefined) return null;
   return (
     <span role="alert" style={{ color: 'var(--destructive)', fontSize: 12 }}>
@@ -315,6 +319,41 @@ const scaffold = JSON.stringify(
 function ClientEditor({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const t = useText(),
     { mode } = usePluginContext();
+  const diagnostics = (text: string): EditorDiagnostic[] => {
+    let parsed: Json;
+    try {
+      parsed = JSON.parse(text || '{}');
+    } catch (e) {
+      return [{ from: 0, to: text.length, severity: 'error', message: e instanceof Error ? e.message : String(e) }];
+    }
+    const out: EditorDiagnostic[] = [];
+    if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed))
+      return [{ from: 0, to: text.length, severity: 'error', message: t('clientObject') }];
+    const c = parsed;
+    if (
+      Array.isArray(c.grant_types) &&
+      c.grant_types.includes('authorization_code') &&
+      !(Array.isArray(c.redirect_uris) && c.redirect_uris.length)
+    )
+      out.push({ from: 0, to: 1, severity: 'error', message: t('redirectRequired') });
+    for (const key of Object.keys(c))
+      if (
+        !clientKeys.includes(key) &&
+        key !== 'client_id' &&
+        key !== 'created_at' &&
+        key !== 'updated_at' &&
+        !key.endsWith('_lifespan')
+      ) {
+        const at = text.indexOf(`"${key}"`);
+        out.push({
+          from: Math.max(0, at),
+          to: Math.max(0, at) + key.length + 2,
+          severity: 'warning',
+          message: t('unknownKey', { key }),
+        });
+      }
+    return out;
+  };
   return (
     <CodeEditor
       label={t('clientJson')}
@@ -323,44 +362,12 @@ function ClientEditor({ value, onChange }: { value: string; onChange: (v: string
       language="json"
       mode={mode}
       height={320}
-      complete={async ({ value: text, position }) =>
-        /[{,]\s*"[^"]*$/.test(text.slice(0, position)) ? clientKeys.map((k) => ({ label: k, apply: k })) : null
-      }
-      validate={async (text) => {
-        let parsed: unknown;
-        try {
-          parsed = JSON.parse(text || '{}');
-        } catch (e) {
-          return [{ from: 0, to: text.length, severity: 'error', message: e instanceof Error ? e.message : String(e) }];
-        }
-        const out: EditorDiagnostic[] = [];
-        if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed))
-          return [{ from: 0, to: text.length, severity: 'error', message: t('clientObject') }];
-        const c = parsed as Record<string, unknown>;
-        if (
-          Array.isArray(c.grant_types) &&
-          c.grant_types.includes('authorization_code') &&
-          !(Array.isArray(c.redirect_uris) && c.redirect_uris.length)
+      complete={({ value: text, position }) =>
+        Promise.resolve(
+          /[{,]\s*"[^"]*$/.test(text.slice(0, position)) ? clientKeys.map((k) => ({ label: k, apply: k })) : null,
         )
-          out.push({ from: 0, to: 1, severity: 'error', message: t('redirectRequired') });
-        for (const key of Object.keys(c))
-          if (
-            !clientKeys.includes(key) &&
-            key !== 'client_id' &&
-            key !== 'created_at' &&
-            key !== 'updated_at' &&
-            !key.endsWith('_lifespan')
-          ) {
-            const at = text.indexOf(`"${key}"`);
-            out.push({
-              from: Math.max(0, at),
-              to: Math.max(0, at) + key.length + 2,
-              severity: 'warning',
-              message: t('unknownKey', { key }),
-            });
-          }
-        return out;
-      }}
+      }
+      validate={(text) => Promise.resolve(diagnostics(text))}
     />
   );
 }
@@ -903,7 +910,7 @@ function Keys() {
           }}
         />
         <ActionError error={rotate.error} />
-        {!(sets as readonly string[]).includes(set) && (
+        {!sets.some((s) => s === set) && (
           <ConfirmAction
             trigger={
               <Button size="sm" variant="outline">
@@ -940,7 +947,7 @@ function Keys() {
             </TableHeader>
             <TableBody>
               {keys.value.keys.map((k, i) => (
-                <TableRow key={`${k.kid}:${i}`}>
+                <TableRow key={k.kid}>
                   <TableCell style={mono}>
                     {k.kid}
                     {i === 0 && (
@@ -952,7 +959,7 @@ function Keys() {
                   <TableCell>{k.alg}</TableCell>
                   <TableCell>{k.use}</TableCell>
                   <TableCell style={{ textAlign: 'right' }}>
-                    {keys.value!.keys.length > 1 && (
+                    {(keys.value?.keys.length ?? 0) > 1 && (
                       <ConfirmAction
                         trigger={
                           <Button size="sm" variant="outline">
