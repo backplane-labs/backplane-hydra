@@ -9,6 +9,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -179,6 +180,8 @@ func TestTokenRefusals(t *testing.T) {
 		"keyIssuer": {issuer.sign("k1", session(now, map[string]any{"iss": "https://evil.example"})), auth.ErrInvalid},
 		"id token":  {issuer.sign("k1", session(now, map[string]any{"client_id": ""})), auth.ErrInvalid},
 		"no scp":    {issuer.sign("k1", session(now, map[string]any{"scp": nil})), auth.ErrInvalid},
+		// An expired ID token is no access token: invalid, not expired.
+		"expired id token": {issuer.sign("k1", session(now, map[string]any{"client_id": "", "exp": now.Add(-time.Minute).Unix()})), auth.ErrInvalid},
 		// A consent added client_id and scp to an ID token: auth_time gives it away.
 		"dressed id token": {issuer.sign("k1", session(now, map[string]any{"auth_time": now.Unix(), "at_hash": "x"})), auth.ErrInvalid},
 		"garbage":          {"a.b.c", auth.ErrInvalid},
@@ -327,5 +330,25 @@ func TestKeysDown(t *testing.T) {
 
 	if _, err := v.Verify(context.Background(), issuer.sign("k1", session(now, nil))); err != nil {
 		t.Fatalf("a known key failed while the keyIssuer issuer down: %v", err)
+	}
+}
+
+// An expired access token is refused with whose token it was, so the caller
+// can tell the client why.
+func TestExpiredNamesTheToken(t *testing.T) {
+	t.Parallel()
+
+	issuer := newIssuer(t)
+	issuer.add("k1")
+
+	now := time.Now()
+	v := verifier(t, issuer, &now)
+
+	_, err := v.Verify(context.Background(), issuer.sign("k1", session(now, map[string]any{"exp": now.Add(-time.Minute).Unix()})))
+
+	var expired *auth.ExpiredError
+	if !errors.As(err, &expired) || !errors.Is(err, auth.ErrExpired) || expired.Auth.Subject == "" ||
+		!strings.Contains(err.Error(), "access token") {
+		t.Fatalf("Verify = %v", err)
 	}
 }

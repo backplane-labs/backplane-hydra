@@ -86,6 +86,18 @@ cache is of the public keys: fetched on first use, again on a token with an
 unknown kid (at most once per 30s) and in the background every 10m; when the
 keys cannot be fetched, the last good set keeps verifying.
 
+Refusals wrap one of the package's errors. An authentic JWT access token out
+of its validity (`exp` passed, `nbf` not come) is `*auth.ExpiredError`
+(`errors.Is(err, auth.ErrExpired)`): its message names the access token and
+its `Auth` says whose token it was; the request is still refused. An
+introspected token Hydra calls inactive is `ErrInactive`: Hydra answers only
+`active: false`, never whether the token expired or was revoked.
+
+Refresh tokens are not verified here: a client exchanges them at Hydra's
+token endpoint. Hydra (v26) refuses every bad refresh token with
+`invalid_grant`; the reason (expired, already used) is only in the
+`error_description` text, and a revoked token reads as a malformed one.
+
 ## Tracing
 
 Every call this service makes to Hydra's admin and public APIs, and every

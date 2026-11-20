@@ -280,6 +280,12 @@ type AcceptLogin struct {
 	ACR         string          `json:"acr,omitempty"`
 	AMR         []string        `json:"amr,omitempty"`
 	Context     json.RawMessage `json:"context,omitempty"`
+	// IdentityProviderSessionID is the login provider's own session (a Kratos
+	// session id): Hydra keeps it with the login session and hands it on.
+	IdentityProviderSessionID string `json:"identity_provider_session_id,omitempty"`
+	// ExtendSessionLifespan resets the remembered login session's lifespan
+	// (remember_for) from now.
+	ExtendSessionLifespan bool `json:"extend_session_lifespan,omitempty"`
 }
 
 // GetLoginRequest reads a pending login.

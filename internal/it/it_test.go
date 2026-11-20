@@ -35,7 +35,9 @@ const (
 	publicURL = "http://127.0.0.1:34444"
 	key       = "it-key"
 	subject   = "user-1"
-	reload    = 2 * time.Second
+	// providerSession is the login provider's session the IT login hands Hydra.
+	providerSession = "kratos-session-1"
+	reload          = 2 * time.Second
 )
 
 var serial sync.Mutex
@@ -104,7 +106,7 @@ func startWith(t *testing.T, edit func(*overlay.Settings), bind func(*backplanet
 	// The login provider: every login is subject's.
 	login := listen(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		to, err := client.AcceptLoginRequest(r.Context(), r.URL.Query().Get("login_challenge"),
-			ory.AcceptLogin{Subject: subject, Remember: true})
+			ory.AcceptLogin{Subject: subject, Remember: true, IdentityProviderSessionID: providerSession})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadGateway)
 
