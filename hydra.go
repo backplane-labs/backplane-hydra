@@ -174,8 +174,10 @@ func newState(root backplane.Root[Config]) (*State, error) {
 		return nil, ErrPublicURL
 	}
 
+	// The key authenticates Hydra's calls at run time; describing the
+	// service (its manifest) needs none.
 	key, err := cfg.callbackKey()
-	if err != nil {
+	if err != nil && !root.Describing() {
 		return nil, err
 	}
 
