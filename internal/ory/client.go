@@ -116,6 +116,13 @@ func IsNotFound(err error) bool {
 	return errors.As(err, &e) && e.Status == http.StatusNotFound
 }
 
+// IsConflict reports a 409: a resource with that id exists already.
+func IsConflict(err error) bool {
+	var e *Error
+
+	return errors.As(err, &e) && e.Status == http.StatusConflict
+}
+
 // Temporary reports a failure worth retrying: Hydra unreachable, timed
 // out, rate limited or failing on its side.
 func Temporary(err error) bool {

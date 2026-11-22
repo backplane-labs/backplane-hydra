@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/backplane-labs/backplane/pkg/backplane/activity"
@@ -75,6 +76,8 @@ func New(parent deps.Scope, hydra ory.Client) *Activities {
 	activity.Handle(a, "GetClient", a.getClient, opts("Read an OAuth 2.0 client")...)
 	activity.Handle(a, "ListClients", a.listClients, opts("List OAuth 2.0 clients, a page at a time")...)
 	activity.Handle(a, "UpdateClient", a.updateClient, opts("Replace an OAuth 2.0 client")...)
+	activity.Handle(a, "UpsertClient", a.upsertClient,
+		opts("Create or replace an OAuth 2.0 client by its id: its declared form")...)
 	activity.Handle(a, "PatchClient", a.patchClient, opts("Apply a JSON Patch to an OAuth 2.0 client")...)
 	activity.Handle(a, "SetClientLifespans", a.setLifespans, opts("Set a client's token lifespans per grant")...)
 	activity.Handle(a, "DeleteClient", a.deleteClient, opts("Delete an OAuth 2.0 client")...)
@@ -151,6 +154,83 @@ func (a *Activities) createClient(ctx context.Context, in ClientIn) (ory.OAuth2C
 	}
 
 	a.publish(ctx, a.clientCreated, ClientEvent{ClientID: out.ClientID, ClientName: out.ClientName, By: byWiring})
+
+	return out, nil
+}
+
+// UpsertClientOut is the client as it now is; Created: it did not exist,
+// so Client holds the secret Hydra generated when the body named none.
+type UpsertClientOut struct {
+	Client  ory.OAuth2Client `json:"client"  schemapb:"secret=true"`
+	Created bool             `json:"created"`
+}
+
+// upsertClient makes the client with in.ClientID equal to in.Client:
+// replaced when it exists, created with that id when it does not. A
+// concurrent creation of the same id (409) is replaced instead, so callers
+// racing on one declared client all end with it.
+func (a *Activities) upsertClient(ctx context.Context, in ClientIn) (UpsertClientOut, error) {
+	if in.ClientID == "" {
+		return UpsertClientOut{}, activity.NonRetryable(ErrNoClientID)
+	}
+
+	body, err := withClientID(in.Client, in.ClientID)
+	if err != nil {
+		return UpsertClientOut{}, activity.NonRetryable(err)
+	}
+
+	out, err := a.hydra.SetClient(ctx, in.ClientID, body)
+	if ory.IsNotFound(err) {
+		out, err = a.hydra.CreateClient(ctx, body)
+		if ory.IsConflict(err) {
+			out, err = a.hydra.SetClient(ctx, in.ClientID, body)
+		} else if err == nil {
+			a.publish(ctx, a.clientCreated, ClientEvent{ClientID: out.ClientID, ClientName: out.ClientName, By: byWiring})
+
+			return UpsertClientOut{Client: out, Created: true}, nil
+		}
+	}
+
+	if err != nil {
+		return UpsertClientOut{}, failure(err)
+	}
+
+	a.publish(ctx, a.clientUpdated, ClientEvent{ClientID: out.ClientID, ClientName: out.ClientName, By: byWiring})
+
+	return UpsertClientOut{Client: out}, nil
+}
+
+// ErrClientBody: the client is not a JSON object, or names another client_id.
+var ErrClientBody = errors.New("client must be a JSON object whose client_id, if any, is the one upserted")
+
+// withClientID is body with client_id set to id; a body naming another id
+// is refused rather than silently renamed.
+func withClientID(body json.RawMessage, id string) (json.RawMessage, error) {
+	fields := map[string]json.RawMessage{}
+	if len(body) > 0 {
+		if err := json.Unmarshal(body, &fields); err != nil {
+			return nil, fmt.Errorf("%w: %w", ErrClientBody, err)
+		}
+	}
+
+	if raw, ok := fields["client_id"]; ok {
+		var named string
+		if err := json.Unmarshal(raw, &named); err != nil || named != id {
+			return nil, ErrClientBody
+		}
+	}
+
+	idRaw, err := json.Marshal(id)
+	if err != nil {
+		return nil, fmt.Errorf("client_id: %w", err)
+	}
+
+	fields["client_id"] = idRaw
+
+	out, err := json.Marshal(fields)
+	if err != nil {
+		return nil, fmt.Errorf("client: %w", err)
+	}
 
 	return out, nil
 }

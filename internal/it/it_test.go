@@ -15,6 +15,7 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -464,6 +465,55 @@ func TestClientRoundTrip(t *testing.T) {
 	if err != nil || after.ClientName != "renamed" ||
 		!strings.Contains(string(after.Raw), `"authorization_code_grant_access_token_lifespan":"15m0s"`) {
 		t.Fatalf("round trip lost fields: %s %v", after.Raw, err)
+	}
+}
+
+// UpsertClient: a declared client is created with its id on a fresh
+// database, replaced afterwards, and callers racing on it all succeed.
+func TestUpsertClient(t *testing.T) {
+	t.Parallel()
+
+	e := start(t, nil)
+	ctx := t.Context()
+	id := "declared-" + strconv.FormatInt(time.Now().UnixNano(), 36)
+	body := func(name string) json.RawMessage {
+		return json.RawMessage(`{"client_name":"` + name + `","grant_types":["authorization_code"],` +
+			`"redirect_uris":["https://app.example/cb"],"token_endpoint_auth_method":"none"}`)
+	}
+	upsert := func(name string) (activities.UpsertClientOut, error) {
+		return backplanetest.Activity[activities.ClientIn, activities.UpsertClientOut](ctx, e.h, "UpsertClient",
+			activities.ClientIn{ClientID: id, Client: body(name)})
+	}
+
+	created, err := upsert("first")
+	if err != nil || !created.Created || created.Client.ClientID != id {
+		t.Fatalf("create: %+v %v", created, err)
+	}
+
+	replaced, err := upsert("second")
+	if err != nil || replaced.Created || replaced.Client.ClientName != "second" {
+		t.Fatalf("replace: %+v %v", replaced, err)
+	}
+
+	race := id + "-race"
+	errs := make(chan error, 4)
+
+	for range 4 {
+		go func() {
+			_, err := backplanetest.Activity[activities.ClientIn, activities.UpsertClientOut](ctx, e.h, "UpsertClient",
+				activities.ClientIn{ClientID: race, Client: body("raced")})
+			errs <- err
+		}()
+	}
+
+	for range 4 {
+		if err := <-errs; err != nil {
+			t.Fatalf("a racing upsert failed: %v", err)
+		}
+	}
+
+	if got, err := e.hydra.GetClient(ctx, race); err != nil || got.ClientName != "raced" {
+		t.Fatalf("raced client: %+v %v", got, err)
 	}
 }
 

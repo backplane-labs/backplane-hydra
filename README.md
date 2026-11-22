@@ -16,7 +16,10 @@ service sits next to it:
   `LoggedOut` — wire it to `kratos.RevokeSessions` to end the identity's
   sessions too. Consents publish `ConsentGranted`.
 - **Admin API → activities**: `CreateClient` (answers the secret),
-  `GetClient`, `ListClients`, `UpdateClient`, `PatchClient`, `SetClientLifespans`,
+  `GetClient`, `ListClients`, `UpdateClient`, `UpsertClient` (create or
+  replace by `client_id`: a declared client; `created` says which, and on
+  creation the answer holds the generated secret; racing callers all end with
+  it), `PatchClient`, `SetClientLifespans`,
   `DeleteClient`, `ListConsents`,
   `RevokeConsents`, `RevokeLoginSessions`, the login/consent/logout request
   steps for products with their own UI (and `RejectLogoutRequest`,
