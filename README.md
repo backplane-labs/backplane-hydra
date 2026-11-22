@@ -49,6 +49,14 @@ result:
   id_token_claims: {email: identity.traits.email}
 ```
 
+## Probes and the sidecar
+
+Startup and readiness pass only once the overlay file is written completely
+(a temporary file renamed in place); readiness also needs Hydra itself. As a
+Kubernetes native sidecar, gate Hydra (the main container) on this service's
+startupProbe (`/app/bin/hydra probe startup`): it never starts without its
+configuration, and nothing waits on Hydra's own readiness in a cycle.
+
 ## Who a token speaks for: `pkg/auth`
 
 A service verifies Hydra's access tokens without a token cache, so every
