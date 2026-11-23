@@ -60,6 +60,10 @@ Kubernetes native sidecar, gate Hydra (the main container) on this service's
 startupProbe (`/app/bin/hydra probe startup`): it never starts without its
 configuration, and nothing waits on Hydra's own readiness in a cycle.
 
+A fresh Compose named volume at `/etc/backplane` inherits the image directory's
+ownership (`65532:65532`); existing volumes and bind mounts must already give
+that UID write access.
+
 ## Who a token speaks for: `pkg/auth`
 
 A service verifies Hydra's access tokens without a token cache, so every
